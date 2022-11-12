@@ -33,19 +33,24 @@ class Sqlite_handler:
         self.cur.execute(f"INSERT INTO {table} VALUES {values}")
         self.con.commit()
 
-    def delete_row(self, table, pos):
-        row_id = self.get_all_rows(table)[pos][1][0]
-        self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
-        self.con.commit()
-
     def get_all_rows(self, table):
 
         self.cur.execute(f"SELECT rowid, * FROM {table};")
         return [i for i in enumerate(self.cur.fetchall())]
 
+    def delete_row(self, table, pos):
+        row_id = self.get_all_rows(table)[pos][1][0]
+        self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
+        self.con.commit()
+
+    def get_row(self, table, pos):
+        return self.get_all_rows(table)[pos]
+
+    
+
     def get_fields(self, table):
         self.cur.execute(f"PRAGMA table_xinfo({table})")
-        return self.cur.fetchall()
+        return [(i[0], i[1]) for i in self.cur.fetchall()]
 
 
 
@@ -63,4 +68,6 @@ with Sqlite_handler("./database.db") as sql:
     #sql.cur.execute("SELECT score FROM movie").fetchall()
     for record in sql.get_all_rows('movie'):
         print(record)
-    #sql.delete_row("movie", 9)
+    #sql.delete_row("movie", 0)
+    print(sql.get_fields('movie'))
+    print(sql.get_row('movie', 10))
