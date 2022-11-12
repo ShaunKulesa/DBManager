@@ -5,14 +5,16 @@ import pathlib
 class Sqlite_handler:
 
     def __init__(self, path):
-
         self.path = path
-        self.setup_db()
         
-    def setup_db(self):
+    def __enter__(self):
         self.path = pathlib.Path(self.path)
         self.con = sqlite3.connect(self.path)
         self.cur = self.con.cursor()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.con.close()
 
     def add_table(self, name, fields):
         if not isinstance(fields,tuple):
@@ -47,17 +49,18 @@ class Sqlite_handler:
 
 
 
-handler = Sqlite_handler("./database.db")
-#handler.add_table("movie", ["title", "year", "score"])
-#handler.add_table("actors", ["age", "oscars", "IQ", "cache"])
-handler.list_tables()
-#handler.add_rows("movie", ["""("Monty Python and the Holy Grail", 1975, 8.2)""",
-#                          """("And Now for Something Completely Different", 1971, 7.5)""",
-#                          """("Monty Python Live at the Hollywood Bowl", 1982, 7.9)""",
-#                          """("Monty Python's The Meaning of Life", 1983, 7.5)""",
-#                          """("Monty Python's Life of Brian", 1979, 8.0)"""])
-#handler.add_rows("actors", ["""("Tom Cruise", 2, -10, "2M")"""])
-#handler.cur.execute("SELECT score FROM movie").fetchall()
-for record in handler.get_all_rows('movie'):
-    print(record)
-#handler.delete_row("movie", 9)
+with Sqlite_handler("./database.db") as sql:
+
+    #sql.add_table("movie", ["title", "year", "score"])
+    #sql.add_table("actors", ["age", "oscars", "IQ", "cache"])
+    sql.list_tables()
+    #sql.add_rows("movie", ["""("Monty Python and the Holy Grail", 1975, 8.2)""",
+    #                          """("And Now for Something Completely Different", 1971, 7.5)""",
+    #                          """("Monty Python Live at the Hollywood Bowl", 1982, 7.9)""",
+    #                          """("Monty Python's The Meaning of Life", 1983, 7.5)""",
+    #                          """("Monty Python's Life of Brian", 1979, 8.0)"""])
+    #sql.add_rows("actors", ["""("Tom Cruise", 2, -10, "2M")"""])
+    #sql.cur.execute("SELECT score FROM movie").fetchall()
+    for record in sql.get_all_rows('movie'):
+        print(record)
+    #sql.delete_row("movie", 9)
