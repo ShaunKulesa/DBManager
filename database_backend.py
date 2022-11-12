@@ -26,17 +26,34 @@ class Sqlite_handler:
         print(tables)
 
 
-    def add_row(self, table, data):
+    def add_rows(self, table, data):
         values = ", ".join(data)
         self.cur.execute(f"INSERT INTO {table} VALUES {values}")
         self.con.commit()
 
+    def delete_row(self, table, pos):
+        row_id = self.get_all_rows(table)[pos][1][0]
+        self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
+        self.con.commit()
+
+    def get_all_rows(self, table):
+
+        self.cur.execute(f"SELECT rowid, * FROM {table};")
+        return [i for i in enumerate(self.cur.fetchall())]
 
 
 
 handler = Sqlite_handler("./database.db")
-handler.add_table("movie", ["title", "year", "score"])
-handler.add_table("actors", ["age", "oscars", "IQ"])
+#handler.add_table("movie", ["title", "year", "score"])
+#handler.add_table("actors", ["age", "oscars", "IQ", "cache"])
 handler.list_tables()
-handler.add_row("movie", ["('Monty Python and the Holy Grail', 1975, 8.2)", "('And Now for Something Completely Different', 1971, 7.5)"])
-handler.cur.execute("SELECT score FROM movie").fetchall()
+handler.add_rows("movie", ["""("Monty Python and the Holy Grail", 1975, 8.2)""",
+                          """("And Now for Something Completely Different", 1971, 7.5)""",
+                          """("Monty Python Live at the Hollywood Bowl", 1982, 7.9)""",
+                          """("Monty Python's The Meaning of Life", 1983, 7.5)""",
+                          """("Monty Python's Life of Brian", 1979, 8.0)"""])
+#handler.add_rows("actors", ["""("Tom Cruise", 2, -10, "2M")"""])
+#handler.cur.execute("SELECT score FROM movie").fetchall()
+for record in handler.get_all_rows('movie'):
+    print(record)
+#handler.delete_row("movie", 9)
