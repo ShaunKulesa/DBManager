@@ -1,6 +1,6 @@
 from tkinter import *
 import time
-from database_backend import Sqlite_handler
+from database_backend import SqliteHandler
 
 
 start = time.perf_counter()
@@ -113,22 +113,22 @@ class Table:
                 self.canvas.create_text(sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2), header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter])
 root = Tk()
 
-table = Table('Person')
-header = Header(table, ['firstName', 'lastName', 'Age'])
-table.add_header(header)
-table.add_records([Record(table, ['Shaun', 'Kulesa', 17,])] * 1000)
-# table.add_records([Record(table, ['John', 'Doe', 20,])] * 100)
+# table = Table('Person')
+# header = Header(table, ['firstName', 'lastName', 'Age'])
+# table.add_header(header)
+# table.add_records([Record(table, ['Shaun', 'Kulesa', 17,])] * 1000)
+# # table.add_records([Record(table, ['John', 'Doe', 20,])] * 100)
 
-table.draw()
+# table.draw()
 
-# with Sqlite_handler("chinook.db") as db:
-#     table = Table('Albums')
-#     header = Header(table, db.get_fields('albums'))
-#     table.add_header(header)
-#     table.add_records([Record(table, record[1]) for record in db.get_all_rows('albums')])
-#     # table.add_records([print(record) for record in db.get_all_rows('albums')])
+with SqliteHandler("chinook.db") as db:
+    table = Table('Albums')
+    header = Header(table, db.get_fields('albums'))
+    table.add_header(header)
+    table.add_records([Record(table, record[1]) for record in db.get_all_rows('albums')])
+    # table.add_records([print(record) for record in db.get_all_rows('albums')])
 
-#     table.draw()
+    table.draw()
 
 
 
