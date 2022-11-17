@@ -54,20 +54,20 @@ class Sqlite_handler:
 
 
 
-with Sqlite_handler("./database.db") as sql:
+# with Sqlite_handler("./database.db") as sql:
 
-    #sql.add_table("movie", ["title", "year", "score"])
-    #sql.add_table("actors", ["age", "oscars", "IQ", "cache"])
-    sql.list_tables()
-    #sql.add_rows("movie", ["""("Monty Python and the Holy Grail", 1975, 8.2)""",
-    #                          """("And Now for Something Completely Different", 1971, 7.5)""",
-    #                          """("Monty Python Live at the Hollywood Bowl", 1982, 7.9)""",
-    #                          """("Monty Python's The Meaning of Life", 1983, 7.5)""",
-    #                          """("Monty Python's Life of Brian", 1979, 8.0)"""])
-    #sql.add_rows("actors", ["""("Tom Cruise", 2, -10, "2M")"""])
-    #sql.cur.execute("SELECT score FROM movie").fetchall()
-    for record in sql.get_all_rows('movie'):
-        print(record)
-    #sql.delete_row("movie", 0)
-    print(sql.get_fields('movie'))
-    print(sql.get_row('movie', 10))
+#     #sql.add_table("movie", ["title", "year", "score"])
+#     #sql.add_table("actors", ["age", "oscars", "IQ", "cache"])
+#     sql.list_tables()
+#     #sql.add_rows("movie", ["""("Monty Python and the Holy Grail", 1975, 8.2)""",
+#     #                          """("And Now for Something Completely Different", 1971, 7.5)""",
+#     #                          """("Monty Python Live at the Hollywood Bowl", 1982, 7.9)""",
+#     #                          """("Monty Python's The Meaning of Life", 1983, 7.5)""",
+#     #                          """("Monty Python's Life of Brian", 1979, 8.0)"""])
+#     #sql.add_rows("actors", ["""("Tom Cruise", 2, -10, "2M")"""])
+#     #sql.cur.execute("SELECT score FROM movie").fetchall()
+#     for record in sql.get_all_rows('movie'):
+#         print(record)
+#     #sql.delete_row("movie", 0)
+#     print(sql.get_fields('movie'))
+#     print(sql.get_row('movie', 10))
