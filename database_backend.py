@@ -2,7 +2,7 @@ import sqlite3
 import pathlib
 
 
-class Sqlite_handler:
+class SqliteHandler:
 
     def __init__(self, path):
         self.path = path
@@ -44,17 +44,24 @@ class Sqlite_handler:
         self.con.commit()
 
     def get_row(self, table, pos):
-        return self.get_all_rows(table)[pos]
-
-    
+        return self.get_all_rows(table)[pos]    
 
     def get_fields(self, table):
         self.cur.execute(f"PRAGMA table_xinfo({table})")
         return [(i[0], i[1]) for i in self.cur.fetchall()]
 
+    def edit_row(self, table, pos, data):
+        fields = self.get_fields(table)
+        row_id = self.get_all_rows(table)[pos][1][0]
+        if len(data) != len(fields):
+            raise ValueError("incorrect number of fields")
+        update = ", ".join([f"{field[1].upper()}={newval}" for field, newval in zip(fields, data) if data != None])
+        print(f"""UPDATE TABLE '{table}' SET {update} WHERE rowid={row_id}""")
+        self.cur.execute(f"""UPDATE TABLE '{table}' SET {update} WHERE rowid={row_id}""")
+        self.con.commit()
 
 
-# with Sqlite_handler("./database.db") as sql:
+# with SqliteHandler("./database.db") as sql:
 
 #     #sql.add_table("movie", ["title", "year", "score"])
 #     #sql.add_table("actors", ["age", "oscars", "IQ", "cache"])
@@ -70,4 +77,6 @@ class Sqlite_handler:
 #         print(record)
 #     #sql.delete_row("movie", 0)
 #     print(sql.get_fields('movie'))
+#     print(sql.get_row('movie', 10))
+#     print(sql.edit_row('movie', 10, ("edited title", 9999, 0)))
 #     print(sql.get_row('movie', 10))
