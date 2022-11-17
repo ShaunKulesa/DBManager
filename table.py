@@ -57,14 +57,12 @@ class Record:
 class Table:
     def __init__(self, table_name):
         self.records = []
-        # self.canvas = Canvas()
-        # self.canvas.pack(anchor='center')
         self.table_name = table_name
 
         self.column_widths = []
 
         frame=Frame(root,width=300,height=300)
-        frame.pack(expand=True, fill=BOTH) #.grid(row=0,column=0)
+        frame.pack(anchor='center') #.grid(row=0,column=0)
         self.canvas=Canvas(frame,bg='#FFFFFF',width=300,height=300,scrollregion=(0,0,10000,10000))
         hbar=Scrollbar(frame,orient=HORIZONTAL)
         hbar.pack(side=BOTTOM,fill=X)
@@ -74,7 +72,7 @@ class Table:
         vbar.config(command=self.canvas.yview)
         self.canvas.config(width=300,height=300)
         self.canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        self.canvas.pack(side=LEFT,expand=True,fill=BOTH)
+        self.canvas.pack(expand=True,fill=BOTH, anchor='center')
     
     def add_header(self, header: Header):
         self.header = header
@@ -85,7 +83,6 @@ class Table:
         self.records.extend(records)
 
     def draw(self):
-        # print(self.records)
         #maths
         for column_counter in range(len(self.columns)):
             widths = []
@@ -113,26 +110,13 @@ class Table:
                 self.canvas.create_text(sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2), header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter])
 root = Tk()
 
-# table = Table('Person')
-# header = Header(table, ['firstName', 'lastName', 'Age'])
-# table.add_header(header)
-# table.add_records([Record(table, ['Shaun', 'Kulesa', 17,])] * 1000)
-# # table.add_records([Record(table, ['John', 'Doe', 20,])] * 100)
-
-# table.draw()
-
 with SqliteHandler("chinook.db") as db:
     table = Table('Albums')
     header = Header(table, db.get_fields('albums'))
     table.add_header(header)
     table.add_records([Record(table, record[1]) for record in db.get_all_rows('albums')])
-    # table.add_records([print(record) for record in db.get_all_rows('albums')])
-
     table.draw()
 
-
-
-        
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start, 2)} second(s)')
 
