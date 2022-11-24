@@ -91,23 +91,38 @@ class Table:
                 widths.append(record.get_text_width(column_counter))
             self.column_widths.append(max(widths))
         record_width = sum(self.column_widths)
-        print(self.column_widths)
-
+        row_number_width = Label(text=str(len(self.records))).winfo_reqwidth()
         header_height = self.header.get_height()
-
-        self.canvas.create_rectangle(0, 0, record_width, header_height + (30 * len(self.records)), fill=self.header.fill_color, outline=self.header.outline_color, width=self.header.outline_width)
+        
+        self.canvas.create_rectangle(2, 2, record_width - 2, (header_height + (30 * len(self.records))) - 2, fill=self.header.fill_color, outline="black", width=1)
 
         self.canvas.config(width=record_width, height=header_height + (header_height * len(self.records)))
 
+        # draw row number background
+        self.canvas.create_rectangle(2, header_height, row_number_width, header_height + (header_height * len(self.records)), fill='light grey')
+
+        #draw row numbers
+        for row_counter in range(len(self.records)):
+            self.canvas.create_text(row_number_width/2, header_height + (row_counter * self.records[row_counter].get_height()) + (self.records[row_counter].get_height()/2), text=str(row_counter + 1), anchor='center')
+        
+        # row number column line
+        self.canvas.create_line(row_number_width, 0, row_number_width, (header_height + (header_height * len(self.records))) - 2, fill=self.header.outline_color, width=self.header.outline_width)
+
+        #column lines
+        column_line_x = row_number_width
+        for column_counter in range(len(self.columns)):
+            column_line_x += self.column_widths[column_counter]
+            self.canvas.create_line(column_line_x, 0, column_line_x, header_height + (header_height * len(self.records)), fill=self.header.outline_color, width=self.header.outline_width)
+
         # draw header with centered text
         for column_counter in range(len(self.columns)):
-            self.canvas.create_text(sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2), header_height / 2, text=self.columns[column_counter])
+            self.canvas.create_text((sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2)) + row_number_width, header_height / 2, text=self.columns[column_counter])
 
-        # draw records with centered text
+        # # draw records with centered text
         for record_counter in range(len(self.records)):
             self.canvas.create_line(0, header_height + (header_height * record_counter), record_width, header_height + (header_height * record_counter), fill='#D3D3D3')
             for column_counter in range(len(self.columns)):
-                self.canvas.create_text(sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2), header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter])
+                self.canvas.create_text((sum(self.column_widths[:column_counter]) + (self.column_widths[column_counter] / 2)) + row_number_width, header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter])
 root = Tk()
 
 with SqliteHandler("chinook.db") as db:

@@ -48,7 +48,7 @@ class SqliteHandler:
 
     def get_fields(self, table):
         self.cur.execute(f"PRAGMA table_xinfo({table})")
-        return [(i[0], i[1]) for i in self.cur.fetchall()]
+        return [(i[1]) for i in self.cur.fetchall()]
 
     def edit_row(self, table, pos, data):
         fields = self.get_fields(table)
