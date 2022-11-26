@@ -66,7 +66,7 @@ class SqliteHandler:
         return True
 
 
-with SqliteHandler("./database.db") as sql:
+# with SqliteHandler("./database.db") as sql:
 
     #sql.add_table("movie", ["title", "year", "score"])
     #sql.add_table("actors", ["age", "oscars", "IQ", "cache"])
