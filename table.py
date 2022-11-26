@@ -134,7 +134,7 @@ with SqliteHandler("chinook.db") as db:
     # print(db.list_tables())
     header = Header(table, db.get_fields('albums'))
     table.add_header(header)
-    table.add_records([Record(table, record[1]) for record in db.get_all_rows('albums')])
+    table.add_records([Record(table, record[1]) for record in db.get_all_records('albums')])
     table.draw()
 
 finish = time.perf_counter()
