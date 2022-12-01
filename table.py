@@ -3,7 +3,7 @@ import time
 from database_backend import SqliteHandler
 
 
-start = time.perf_counter()
+# start = time.perf_counter()
 
 class Header:
     def __init__(self, table, data=[], outline_color='black', fill_color='white', outline_width=0):
@@ -127,17 +127,17 @@ class Table:
             self.canvas.create_line(row_number_width + 1, header_height + (header_height * record_counter), record_width + row_number_width + 1, header_height + (header_height * record_counter), fill='#D3D3D3')
             for column_counter in range(len(self.columns)):
                 self.canvas.create_text(sum(self.column_widths[:column_counter]) + row_number_width + 2, header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter], anchor='w')
-root = Tk()
+# root = Tk()
 
-with SqliteHandler("chinook.db") as db:
-    table = Table('albums')
-    # print(db.list_tables())
-    header = Header(table, db.get_fields('albums'))
-    table.add_header(header)
-    table.add_records([Record(table, record[1]) for record in db.get_all_records('albums')])
-    table.draw()
+# with SqliteHandler("chinook.db") as db:
+#     table = Table('albums')
+#     # print(db.list_tables())
+#     header = Header(table, db.get_fields('albums'))
+#     table.add_header(header)
+#     table.add_records([Record(table, record[1]) for record in db.get_all_records('albums')])
+#     table.draw()
 
-finish = time.perf_counter()
-print(f'Finished in {round(finish-start, 2)} second(s)')
+# finish = time.perf_counter()
+# print(f'Finished in {round(finish-start, 2)} second(s)')
 
-mainloop()
+# mainloop()
