@@ -55,13 +55,13 @@ class Record:
         return tallest_text + (self.outline_width * 2)
 
 class Table:
-    def __init__(self, table_name):
+    def __init__(self, parent, table_name):
         self.records = []
         self.table_name = table_name
 
         self.column_widths = []
 
-        frame=Frame(root,width=300,height=300)
+        frame=Frame(parent, width=300,height=300)
         frame.pack(anchor='center') #.grid(row=0,column=0)
         self.canvas=Canvas(frame,bg='#FFFFFF',width=300,height=300)
         hbar=Scrollbar(frame,orient=HORIZONTAL)
