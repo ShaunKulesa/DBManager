@@ -130,14 +130,15 @@ class Table:
 # root = Tk()
 
 # with SqliteHandler("chinook.db") as db:
-#     table = Table('albums')
+#     table = Table(root, 'albums')
 #     # print(db.list_tables())
 #     header = Header(table, db.get_fields('albums'))
+#     print(db.get_fields('albums'))
 #     table.add_header(header)
 #     table.add_records([Record(table, record[1]) for record in db.get_all_records('albums')])
 #     table.draw()
 
 # finish = time.perf_counter()
-# print(f'Finished in {round(finish-start, 2)} second(s)')
+# # print(f'Finished in {round(finish-start, 2)} second(s)')
 
 # mainloop()
