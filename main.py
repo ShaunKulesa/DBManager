@@ -19,35 +19,40 @@ class Window(Tk):
         self.frame.pack()
 
 class MainFrame(Frame):
-    def __init__(self, window, width, height, background_color):
+    def __init__(self, window: Tk, width, height, background_color):
         Frame.__init__(self, window, width=width, height=height, bg=background_color)
+        
         self.window = window
         self.width = width
         self.height = height
-
         self.database_path = None
 
-        m1 = PanedWindow(orient=VERTICAL)
+        self.window.update()
+
+        m1 = PanedWindow(orient=VERTICAL, bg='blue')
         m1.pack(fill=BOTH)
 
-        top_frame = Frame(m1, height=600 * 0.20, width=800, relief=SUNKEN)
+        top_frame = Frame(m1, relief=SUNKEN, width = self.window.winfo_width(), height = self.window.winfo_height() * 0.10)
+        top_frame.pack_propagate(0)
         m1.add(top_frame)
 
         open_file_button = Button(top_frame, text="Open File", command=lambda: self.open_file())
         open_file_button.pack()
 
-        m2 = PanedWindow(m1, orient=HORIZONTAL)
-        m2.pack(fill=Y, expand=True)
+        m2 = PanedWindow(m1, orient=HORIZONTAL, bg='red')
+        m2.pack(fill=BOTH, expand=True)
         m1.add(m2)
 
-        left_frame = Frame(m2, width=800 * 0.20, relief=SUNKEN)
+        left_frame = Frame(m2, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.90, relief=SUNKEN)
+        left_frame.pack_propagate(0)
         left_frame.pack(fill=BOTH, expand=True)
         m2.add(left_frame)
 
         self.table_explorer = ttk.Treeview(left_frame)
-        self.table_explorer.pack()
+        self.table_explorer.pack(expand=True, fill=BOTH)
 
-        self.middle_frame = Frame(m2, relief=SUNKEN)
+        self.middle_frame = Frame(m2, relief=SUNKEN, width = self.window.winfo_width() * 0.90,height = self.window.winfo_height() * 0.90)
+        self.middle_frame.pack_propagate(0)
         self.middle_frame.pack(fill=BOTH, expand=True)
         m2.add(self.middle_frame)
     
