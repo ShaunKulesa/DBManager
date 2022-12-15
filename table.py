@@ -61,13 +61,13 @@ class Table:
 
         self.column_widths = []
 
-        frame=Frame(parent, width=300,height=300)
-        frame.pack(anchor='center') #.grid(row=0,column=0)
-        self.canvas=Canvas(frame,bg='#FFFFFF',width=300,height=300)
-        hbar=Scrollbar(frame,orient=HORIZONTAL)
+        self.frame=Frame(parent)
+        # frame.pack(anchor='center') #.grid(row=0,column=0)
+        self.canvas=Canvas(self.frame,bg='#FFFFFF',width=300,height=300)
+        hbar=Scrollbar(self.frame,orient=HORIZONTAL)
         hbar.pack(side=BOTTOM,fill=X)
         hbar.config(command=self.canvas.xview)
-        vbar=Scrollbar(frame,orient=VERTICAL)
+        vbar=Scrollbar(self.frame,orient=VERTICAL)
         vbar.pack(side=RIGHT,fill=Y)
         vbar.config(command=self.canvas.yview)
         self.canvas.config(width=300,height=300)
@@ -93,10 +93,6 @@ class Table:
         record_width = sum(self.column_widths)
         row_number_width = Label(text=str(len(self.records))).winfo_reqwidth()
         header_height = self.header.get_height()
-
-        print(row_number_width)
-        print(record_width)
-        print(self.column_widths)
         
         self.canvas.create_rectangle(2, 2, record_width + row_number_width, (header_height + (header_height * len(self.records))) - 2, fill=self.header.fill_color, outline="black", width=1)
 

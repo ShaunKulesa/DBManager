@@ -3,6 +3,7 @@ from database_backend import SqliteHandler
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
+from PIL import ImageTk, Image
 
 class Window(Tk):
     def __init__(self, frame, *args):
@@ -19,38 +20,37 @@ class Window(Tk):
         self.frame.pack()
 
 class MainFrame(Frame):
-    def __init__(self, window, width, height, background_color):
+    def __init__(self, window: Tk, width, height, background_color):
         Frame.__init__(self, window, width=width, height=height, bg=background_color)
+        
         self.window = window
         self.width = width
         self.height = height
-
         self.database_path = None
 
-        m1 = PanedWindow(orient=VERTICAL)
-        m1.pack(fill=BOTH)
+        self.window.update()
 
-        top_frame = Frame(m1, height=600 * 0.20, width=800, relief=SUNKEN, bg="red")
-        m1.add(top_frame)
+        top_frame = Frame(self.window, relief=SUNKEN, width = self.window.winfo_width(), height = self.window.winfo_height() * 0.10, bg="#E78587",)
+        top_frame.pack_propagate(0)
+        top_frame.pack(side = TOP)
+        
+        self.open_folder_icon = ImageTk.PhotoImage(Image.open("open_file_icon.png").resize((40, 40)))
+        open_folder_button = Button(top_frame, image=self.open_folder_icon, command=lambda: self.open_file(), width=100, height=100)
+        open_folder_button.pack(side=LEFT)
 
-        open_file_button = Button(top_frame, text="Open File", command=lambda: self.open_file())
-        open_file_button.pack()
-
-        m2 = PanedWindow(m1, orient=HORIZONTAL)
-        m1.add(m2)
-
-        left_frame = Frame(m2, height=600, width=800 * 0.20, relief=SUNKEN, bg="blue")
-        m2.add(left_frame)
+        left_frame = Frame(self.window, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.90, bg="#E78587", highlightbackground="black", highlightthickness=1)
+        left_frame.pack_propagate(0)
+        left_frame.pack(side = LEFT)
 
         self.table_explorer = ttk.Treeview(left_frame)
-        self.table_explorer.pack()
+        self.table_explorer.pack(expand=True, fill=BOTH)
 
-        self.middle_frame = Frame(m2, height=600, width=800 * 0.60, relief=SUNKEN, bg="green")
-        m2.add(self.middle_frame)
+        self.middle_frame = Frame(self.window, relief=SUNKEN, width = self.window.winfo_width() * 0.90,height = self.window.winfo_height() * 0.90)
+        self.middle_frame.pack_propagate(0)
+        self.middle_frame.pack(side = LEFT)
     
     def open_file(self):
-        file_explorer = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
-        self.database_path = file_explorer
+        self.database_path = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
 
         with SqliteHandler(self.database_path) as sql:
             tables = sql.list_tables()
@@ -59,14 +59,12 @@ class MainFrame(Frame):
 
             self.table_explorer.bind("<<TreeviewSelect>>", self.load_table)
 
-
             for table in tables:
                 self.table_explorer.insert('', 'end', text=table, iid=table)
 
                 for field in sql.get_fields(table):
                     self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
         
-    
     def load_table(self, event):
         self.table = Table(self.middle_frame, self.database_path.split("/")[-1].split(".")[0])
 
@@ -74,19 +72,14 @@ class MainFrame(Frame):
             table = self.table_explorer.focus()
             table = table.split("-?!£$%^&*")[0]
 
-            print(table)
-
-            print(sql.get_fields(table))
             header = Header(self.table, sql.get_fields(table))
             self.table.add_header(header)
 
             for record in sql.get_all_records(table):
                 self.table.add_records([Record(self.table, record[1])])
 
-            # print(sql.get_all_records(table))
-
-
         self.table.draw()
+        self.table.frame.pack(side=LEFT, fill=BOTH, expand=True)
 
 window = Window(MainFrame, 800, 600, None)
 mainloop()
