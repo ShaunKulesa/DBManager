@@ -25,7 +25,7 @@ class SqliteHandler:
     def list_tables(self):
         self.cur.execute("SELECT name FROM sqlite_master")
         tables = [tup[0] for tup in self.cur.fetchall()]
-        print(tables)
+        return tables
 
 
     def add_records(self, table, data):
