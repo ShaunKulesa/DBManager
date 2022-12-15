@@ -3,6 +3,7 @@ from database_backend import SqliteHandler
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
+from PIL import ImageTk, Image
 
 class Window(Tk):
     def __init__(self, frame, *args):
@@ -29,32 +30,24 @@ class MainFrame(Frame):
 
         self.window.update()
 
-        m1 = PanedWindow(orient=VERTICAL, bg='blue')
-        m1.pack(fill=BOTH)
-
-        top_frame = Frame(m1, relief=SUNKEN, width = self.window.winfo_width(), height = self.window.winfo_height() * 0.10)
+        top_frame = Frame(self.window, relief=SUNKEN, width = self.window.winfo_width(), height = self.window.winfo_height() * 0.10, bg="#E78587",)
         top_frame.pack_propagate(0)
-        m1.add(top_frame)
+        top_frame.pack(side = TOP)
+        
+        self.open_folder_icon = ImageTk.PhotoImage(Image.open("open_file_icon.png").resize((40, 40)))
+        open_folder_button = Button(top_frame, image=self.open_folder_icon, command=lambda: self.open_file(), width=100, height=100)
+        open_folder_button.pack(side=LEFT)
 
-        open_file_button = Button(top_frame, text="Open File", command=lambda: self.open_file())
-        open_file_button.pack()
-
-        m2 = PanedWindow(m1, orient=HORIZONTAL, bg='red')
-        m2.pack(fill=BOTH, expand=True)
-        m1.add(m2)
-
-        left_frame = Frame(m2, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.90, relief=SUNKEN)
+        left_frame = Frame(self.window, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.90, bg="#E78587", highlightbackground="black", highlightthickness=1)
         left_frame.pack_propagate(0)
-        left_frame.pack(fill=BOTH, expand=True)
-        m2.add(left_frame)
+        left_frame.pack(side = LEFT)
 
         self.table_explorer = ttk.Treeview(left_frame)
         self.table_explorer.pack(expand=True, fill=BOTH)
 
-        self.middle_frame = Frame(m2, relief=SUNKEN, width = self.window.winfo_width() * 0.90,height = self.window.winfo_height() * 0.90)
+        self.middle_frame = Frame(self.window, relief=SUNKEN, width = self.window.winfo_width() * 0.90,height = self.window.winfo_height() * 0.90)
         self.middle_frame.pack_propagate(0)
-        self.middle_frame.pack(fill=BOTH, expand=True)
-        m2.add(self.middle_frame)
+        self.middle_frame.pack(side = LEFT)
     
     def open_file(self):
         self.database_path = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
