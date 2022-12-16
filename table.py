@@ -2,9 +2,6 @@ from tkinter import *
 import time
 from database_backend import SqliteHandler
 
-
-# start = time.perf_counter()
-
 class Header:
     def __init__(self, table, data=[], outline_color='black', fill_color='white', outline_width=0):
         self.table = table
