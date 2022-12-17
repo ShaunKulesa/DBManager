@@ -31,37 +31,28 @@ class MainFrame(tk.Frame):
 
         self.window.update()
 
-        self.header_frame = tk.Frame()
-        self.header_frame.pack()
-
-        self.header_frame.update()
-        
-        top_frame = Toolbar(self.header_frame, self.window.winfo_width(), self.window.winfo_height() * 0.05)
+        top_frame = Toolbar(self, self.window.winfo_width(), self.window.winfo_height() * 0.05)
         top_frame.pack_propagate(0)
-        top_frame.pack(side="top", anchor="nw")
+        top_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
         file_button = ToolbarButton(self.window, top_frame, text="File")
         file_button.pack(side="left", fill="y")
-        file_button.add_button('New')
-        file_button.add_button('Open')
+        file_button.add_button('New', None)
+        file_button.add_button('Open', self.open_file)
 
         edit_button = ToolbarButton(self.window, top_frame, text="Edit")
         edit_button.pack(side="left", fill="y")
-        edit_button.add_button('Undo')
-        edit_button.add_button('Redo')
+        edit_button.add_button('Undo', None)
+        edit_button.add_button('Redo', None)
 
-        self.body_frame = tk.Frame()
-        self.body_frame.pack()
-
-        left_frame = tk.Frame(self.body_frame, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.90, bg="#E78587", highlightbackground="black", highlightthickness=1)
-
-        left_frame.pack(side="left")
+        left_frame = tk.Frame(self, width = self.window.winfo_width() * 0.20, height = self.window.winfo_height() * 0.95, bg="#E78587", highlightbackground="black", highlightthickness=1)
+        left_frame.grid(row=1, column=0, sticky="nsew")
 
         self.table_explorer = ttk.Treeview(left_frame)
-        self.table_explorer.pack(expand=True, fill=tk.BOTH)
+        self.table_explorer.pack(expand=True, anchor="n", fill="both")
 
-        self.middle_frame = tk.Frame(self.body_frame, relief=tk.SUNKEN, width = self.window.winfo_width() * 0.90,height = self.window.winfo_height() * 0.90, bg="blue", highlightbackground="black", highlightthickness=1)
-        self.middle_frame.pack(side="left")
+        self.middle_frame = tk.Frame(self, relief=tk.SUNKEN, width = self.window.winfo_width() * 0.80, height = self.window.winfo_height() * 0.95, bg="blue", highlightbackground="black", highlightthickness=1)
+        self.middle_frame.grid(row=1, column=1, sticky="nsew")
 
 
     

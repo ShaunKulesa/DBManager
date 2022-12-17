@@ -19,7 +19,6 @@ class ToolbarButton(ttk.Button):
 
         self.update()
         self.popup_frame = ttk.Frame(window, style='ToolbarButton.TFrame')
-
         self.popup_frame.bind('<Leave>', self.on_leave)
     
     def on_click(self):
@@ -29,8 +28,8 @@ class ToolbarButton(ttk.Button):
     def on_leave(self, event):
         self.popup_frame.place_forget()
         
-    def add_button(self, text):
-        button = ttk.Button(self.popup_frame, text=text, style='ToolbarButton.TButton', takefocus=False)
+    def add_button(self, text, command):
+        button = ttk.Button(self.popup_frame, text=text, style='ToolbarButton.TButton', takefocus=False, command=command)
         button.pack(fill=Y)
 
 
