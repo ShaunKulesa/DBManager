@@ -17,16 +17,17 @@ class Header:
     def get_columns(self):
         return self.data
     
-    def get_text_width(self, column):
-        text = Label(text=self.data[column])
-        return text.winfo_reqwidth()
+    def get_text_width(self, column, test_label):
+        test_label.config(text=self.data[column])
+        width = test_label.winfo_reqwidth()
+        return width
     
-    def get_height(self):
+    def get_height(self, test_label):
         tallest_text = 0
         for text in self.data:
-            text = Label(text=text)
-            if text.winfo_reqheight() > tallest_text:
-                tallest_text = text.winfo_reqheight()
+            test_label.config(text=text)
+            if test_label.winfo_reqheight() > tallest_text:
+                tallest_text = test_label.winfo_reqheight()
             
         return tallest_text + (self.outline_width * 2)
 
@@ -38,16 +39,17 @@ class Record:
         self.fill_color = fill_color
         self.outline_width = outline_width
 
-    def get_text_width(self, column):
-        text = Label(text=self.data[column])
-        return text.winfo_reqwidth()
+    def get_text_width(self, column, test_label):
+        test_label.config(text=self.data[column])
+        width = test_label.winfo_reqwidth()
+        return width
 
-    def get_height(self):
+    def get_height(self, test_label):
         tallest_text = 0
         for text in self.data:
-            text = Label(text=text)
-            if text.winfo_reqheight() > tallest_text:
-                tallest_text = text.winfo_reqheight()
+            test_label.config(text=text)
+            if test_label.winfo_reqheight() > tallest_text:
+                tallest_text = test_label.winfo_reqheight()
          
         return tallest_text + (self.outline_width * 2)
 
@@ -80,16 +82,22 @@ class Table:
         self.records.extend(records)
 
     def draw(self):
+        test_label = Label()
+
         #maths
         for column_counter in range(len(self.columns)):
             widths = []
-            widths.append(self.header.get_text_width(column_counter))
+            widths.append(self.header.get_text_width(column_counter, test_label))
             for record in self.records:
-                widths.append(record.get_text_width(column_counter))
+                widths.append(record.get_text_width(column_counter, test_label))
             self.column_widths.append(max(widths))
         record_width = sum(self.column_widths)
-        row_number_width = Label(text=str(len(self.records))).winfo_reqwidth()
-        header_height = self.header.get_height()
+
+        larget_row_text = Label(text=str(len(self.records)))
+        row_number_width = larget_row_text.winfo_reqwidth()
+        larget_row_text.destroy()
+        
+        header_height = self.header.get_height(test_label)
         
         self.canvas.create_rectangle(2, 2, record_width + row_number_width, (header_height + (header_height * len(self.records))) - 2, fill=self.header.fill_color, outline="black", width=1)
 
@@ -100,7 +108,7 @@ class Table:
 
         #draw row numbers
         for row_counter in range(len(self.records)):
-            self.canvas.create_text((row_number_width/2), header_height + (row_counter * self.records[row_counter].get_height()) + (self.records[row_counter].get_height()/2), text=str(row_counter + 1), anchor='center')
+            self.canvas.create_text((row_number_width/2), header_height + (row_counter * self.records[row_counter].get_height(test_label)) + (self.records[row_counter].get_height(test_label)/2), text=str(row_counter + 1), anchor='center')
         
         # row number column line
         self.canvas.create_line(row_number_width, 2, row_number_width, (header_height + (header_height * len(self.records))) - 2, fill=self.header.outline_color, width=self.header.outline_width)
@@ -120,6 +128,14 @@ class Table:
             self.canvas.create_line(row_number_width + 1, header_height + (header_height * record_counter), record_width + row_number_width + 1, header_height + (header_height * record_counter), fill='#D3D3D3')
             for column_counter in range(len(self.columns)):
                 self.canvas.create_text(sum(self.column_widths[:column_counter]) + row_number_width + 2, header_height + (header_height * record_counter) + (header_height / 2), text=self.records[record_counter].data[column_counter], anchor='w')
+
+        test_label.destroy()
+
+    def reset(self):
+        self.canvas.delete('all')
+        self.records = []
+        self.column_widths = []
+
 # root = Tk()
 
 # with SqliteHandler("chinook.db") as db:

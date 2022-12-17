@@ -11,9 +11,13 @@ class Window(tk.Tk):
         tk.Tk.__init__(self)
         self.title("DBManager")
         self.geometry("800x600")
+        # self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.frame = frame(self, *args)
         self.frame.pack()
+    
+    def on_close(self):
+        self.destroy()
     
     def switch_frame(self, frame, *args):
         self.frame.destroy()
@@ -54,10 +58,10 @@ class MainFrame(tk.Frame):
         self.middle_frame = tk.Frame(self, relief=tk.SUNKEN, width = self.window.winfo_width() * 0.80, height = self.window.winfo_height() * 0.95, bg="blue", highlightbackground="black", highlightthickness=1)
         self.middle_frame.grid(row=1, column=1, sticky="nsew")
 
+        self.table = None
 
-    
     def open_file(self):
-        self.database_path = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
+        self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
 
         with SqliteHandler(self.database_path) as sql:
             tables = sql.list_tables()
@@ -73,6 +77,10 @@ class MainFrame(tk.Frame):
                     self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
         
     def load_table(self, event):
+
+        if self.table:
+            self.table.frame.destroy()
+        
         self.table = Table(self.middle_frame, self.database_path.split("/")[-1].split(".")[0])
 
         with SqliteHandler(self.database_path) as sql:
