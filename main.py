@@ -115,6 +115,8 @@ class MainFrame(tk.Frame):
 
         self.table.draw()
         self.table.grid(row=0, column=0, sticky="nsew")
+        self.middle_frame.grid_columnconfigure(0, weight=1)
+        self.middle_frame.grid_rowconfigure(0, weight=1)
 
 window = Window(MainFrame, 800, 600, None)
 tk.mainloop()

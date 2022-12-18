@@ -13,9 +13,15 @@ class TreeviewTable(ttk.Treeview):
         self.bind('<<TreeviewSelect>>', self.item_selected)
 
         #add scrollbar
-        self.scrollbar = ttk.Scrollbar(master, orient=tk.VERTICAL, command=self.yview)
-        self.configure(yscroll=self.scrollbar.set)
-        self.scrollbar.grid(row=0, column=1, sticky='ns')
+        self.scrollbar_y = ttk.Scrollbar(master, orient=tk.VERTICAL, command=self.yview)
+        self.configure(yscroll=self.scrollbar_y.set)
+        self.scrollbar_y.grid(row=0, column=1, sticky='ns')
+
+        self.scrollbar_x = ttk.Scrollbar(master, orient=tk.HORIZONTAL, command=self.xview)
+        self.configure(xscroll=self.scrollbar_x.set)
+        self.scrollbar_x.grid(row=1, column=0, sticky='ew')
+
+
     
     def item_selected(self, event):
         for selected_item in self.selection():
