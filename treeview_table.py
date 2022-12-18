@@ -24,7 +24,7 @@ class TreeviewTable(ttk.Treeview):
            
             # show a message
             print(record)
-            showinfo(title='Information', message=str(','.join(record)))
+            showinfo(title='Information', message=','.join(map(str, record)))
 
     def add_records(self, records: tuple):
         self.records.extend(records)
