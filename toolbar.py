@@ -2,8 +2,8 @@ from tkinter import *
 from tkinter import ttk
 
 class Toolbar(Frame):
-    def __init__(self, parent, width, height):
-        Frame.__init__(self, parent, width=width, height=height, background='#922724')
+    def __init__(self, parent):
+        Frame.__init__(self, parent, background='#922724')
         self.parent = parent
         style = ttk.Style()
         style.theme_use('clam')

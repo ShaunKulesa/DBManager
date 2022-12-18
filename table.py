@@ -1,6 +1,7 @@
 from tkinter import *
 import time
 from database_backend import SqliteHandler
+import tkinter.font as tkfont
 
 class Header:
     def __init__(self, table, data=[], outline_color='black', fill_color='white', outline_width=0):
@@ -41,8 +42,8 @@ class Record:
 
     def get_text_width(self, column, test_label):
         test_label.config(text=self.data[column])
-        width = test_label.winfo_reqwidth()
-        return width
+        return test_label.winfo_reqwidth()
+        
 
     def get_height(self, test_label):
         tallest_text = 0
@@ -53,6 +54,9 @@ class Record:
          
         return tallest_text + (self.outline_width * 2)
 
+    # def get_text_width(self, column):
+    #    return tkfont.Font(family="Consolas", size=10, weight="normal").measure(self.data[column])
+    
 class Table:
     def __init__(self, parent, table_name):
         self.records = []
@@ -82,16 +86,20 @@ class Table:
         self.records.extend(records)
 
     def draw(self):
+        
+        # start = time.time()
         test_label = Label()
+        # print("Time to create test label: " + str(time.time() - start))
 
+        start = time.time()
         #maths
         for column_counter in range(len(self.columns)):
-            widths = []
-            widths.append(self.header.get_text_width(column_counter, test_label))
+            widths = [self.header.get_text_width(column_counter, test_label)]
             for record in self.records:
                 widths.append(record.get_text_width(column_counter, test_label))
             self.column_widths.append(max(widths))
         record_width = sum(self.column_widths)
+        print("Time to calculate widths: " + str(time.time() - start))
 
         larget_row_text = Label(text=str(len(self.records)))
         row_number_width = larget_row_text.winfo_reqwidth()
