@@ -29,7 +29,7 @@ class TreeviewTable(ttk.Treeview):
             record = item['values']
            
             # show a message
-            print(record)
+            # print(record)
             showinfo(title='Information', message=','.join(map(str, record)))
 
     def add_records(self, records: tuple):
@@ -43,10 +43,13 @@ class TreeviewTable(ttk.Treeview):
         # define headings
         for field in self.fields:
             self.heading(field, text=field)
+            # print("field", field)
         
         # add data to the treeview
         for record in self.records:
             self.insert('', tk.END, values=record)
+
+        # print(self.records)
 
 # window = tk.Tk()
 # window.title('Treeview demo')

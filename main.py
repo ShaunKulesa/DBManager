@@ -63,18 +63,10 @@ class MainFrame(tk.Frame):
         self.middle_frame.grid(row=1, column=1, sticky="nsew")
 
         #add weight to columns and rows
-        # self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
         self.table = None
-    
-    # def resize(self, event):
-    #     self.window.update()
-    #     self.top_frame.config(width=self.window.winfo_width(), height=self.window.winfo_height() * 0.05)
-    #     self.left_frame.config(width=self.window.winfo_width() * 0.20, height=self.window.winfo_height() * 0.95)
-    #     self.middle_frame.config(width=self.window.winfo_width() * 0.80, height=self.window.winfo_height() * 0.95)
-    #     print("resize")
 
     def open_file(self):
         self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
@@ -90,6 +82,7 @@ class MainFrame(tk.Frame):
                 self.table_explorer.insert('', 'end', text=table, iid=table)
 
                 for field in sql.get_fields(table):
+                    # print(field)
                     self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
         
     def load_table(self, event):
@@ -101,17 +94,31 @@ class MainFrame(tk.Frame):
 
         with SqliteHandler(self.database_path) as sql:
             table = self.table_explorer.focus()
-            table = table.split("-?!£$%^&*")[0]
+            table = table.split("-?!£$%^&*")
 
-            self.table.add_fields(sql.get_fields(table))
+            if len(table) == 1:                
+                self.table.add_fields(sql.get_fields(table[0]))
 
-            records = []
+                records = []
 
-            for record in sql.get_all_records(table):
-                records.append(record[1])
+                print(sql.get_all_records(table[0]))
+                for record in sql.get_all_records(table[0]):
+                    records.append(record)
+                    
+                self.table.add_records(records)
             
-            self.table.add_records(records)
+            elif len(table) == 2:
+                fields = sql.get_fields(table[0])
+                field = table[1]
 
+                self.table.add_fields([field])
+
+                records = []
+
+                for record in sql.get_all_records(table[0]):
+                    records.append([record[fields.index(field)]])
+                
+                self.table.add_records(records)
 
         self.table.draw()
         self.table.grid(row=0, column=0, sticky="nsew")

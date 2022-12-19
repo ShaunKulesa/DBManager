@@ -38,8 +38,8 @@ class SqliteHandler:
         self.con.commit()
 
     def get_all_records(self, table):
-        self.cur.execute(f"SELECT rowid, * FROM {table} ;")
-        return [i for i in enumerate(self.cur.fetchall())]
+        self.cur.execute(f"SELECT * FROM {table} ;")
+        return self.cur.fetchall()
 
     def delete_record(self, table, pos):
         row_id = self.get_all_records(table)[pos][1][0]
