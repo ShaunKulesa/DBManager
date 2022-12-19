@@ -9,8 +9,6 @@ class TreeviewTable(ttk.Treeview):
         self.fields = []
         self.records = []
 
-        #click call back
-        self.bind('<<TreeviewSelect>>', self.item_selected)
 
         #add scrollbar
         self.scrollbar_y = ttk.Scrollbar(master, orient=tk.VERTICAL, command=self.yview)
@@ -21,16 +19,8 @@ class TreeviewTable(ttk.Treeview):
         self.configure(xscroll=self.scrollbar_x.set)
         self.scrollbar_x.grid(row=1, column=0, sticky='ew')
 
-
-    
-    def item_selected(self, event):
-        for selected_item in self.selection():
-            item = self.item(selected_item)
-            record = item['values']
-           
-            # show a message
-            # print(record)
-            showinfo(title='Information', message=','.join(map(str, record)))
+    def add_selected_item_callback(self, callback):
+        self.bind('<<TreeviewSelect>>', callback)
 
     def add_records(self, records: tuple):
         self.records.extend(records)
