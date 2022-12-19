@@ -22,6 +22,9 @@ class ToolbarButton(ttk.Button):
         self.popup_frame.bind('<Leave>', self.on_leave)
     
     def on_click(self):
+        if self.popup_frame.winfo_ismapped():
+            self.on_leave("dummy")
+            return
         self.popup_frame.place(x=self.winfo_x(), y=self.winfo_y() + self.winfo_height())
         self.popup_frame.tkraise()
     
