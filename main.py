@@ -24,7 +24,10 @@ class Window(tk.Tk):
 class MainFrame(tk.Frame):
     def __init__(self, window: tk.Tk, width, height, background_color):
         tk.Frame.__init__(self, window, width=width, height=height, bg=background_color)
-        
+
+        # self.changes = {"table_name": [(record_id, (new_data))]}
+        self.changes = {}
+
         self.window = window
         self.width = width
         self.height = height
@@ -64,9 +67,10 @@ class MainFrame(tk.Frame):
         for selected_item in self.table.selection():
             item = self.table.item(selected_item)
             record = item['values']
+        
+        #get record_number from event
+        record_id = record[0]
 
-        
-        
         #add top level
         top_level = tk.Toplevel(self.window, bg="white")
         top_level.title("Edit Record")
@@ -83,27 +87,37 @@ class MainFrame(tk.Frame):
             entry = tk.Entry(top_level)
             entry.grid(row=i, column=1, sticky="w")
             entry.insert(0, record[i])
-
-
         
+        #add buttons
+        save_button = tk.Button(top_level, text="Save", bg="white")
+        save_button.grid(row=len(self.table.fields), column=0, sticky="w")
+
+        cancel_button = tk.Button(top_level, text="Cancel", bg="white", command=top_level.destroy)
+        cancel_button.grid(row=len(self.table.fields), column=1, sticky="w")
+    
+    def edit_record_save(self, record_id, new_data):
+        if self.table.table_name not in self.changes:
+            self.changes[self.table.table_name] = [(record_id, new_data)]
+        else:
+            self.changes[self.table.table_name].append((record_id, new_data))
 
     def open_file(self, db=None):
         self.table_explorer.delete(*self.table_explorer.get_children())
         if not db:
             self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
+        else:
+            self.database_path = db
+        self.table_explorer.heading("#0", text=self.database_path.split("/")[-1].split(".")[0], anchor=tk.W)
+        self.table_explorer.bind("<<TreeviewSelect>>", self.load_table)
 
         with SqliteHandler(self.database_path) as sql:
             tables = sql.list_tables()
 
-            self.table_explorer.heading("#0", text=self.database_path.split("/")[-1].split(".")[0], anchor=tk.W)
+        for table in tables:
+            self.table_explorer.insert('', 'end', text=table, iid=table)
 
-            self.table_explorer.bind("<<TreeviewSelect>>", self.load_table)
-
-            for table in tables:
-                self.table_explorer.insert('', 'end', text=table, iid=table)
-
-                for field in sql.get_fields(table):
-                    self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
+            for field in sql.get_fields(table):
+                self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
     
     def create_new_file(self):
         file = filedialog.asksaveasfile(filetypes = [('DB File', '*.db*')], defaultextension = [('DB File', '*.db*')])

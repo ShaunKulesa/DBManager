@@ -9,7 +9,6 @@ class TreeviewTable(ttk.Treeview):
         self.fields = []
         self.records = []
 
-
         #add scrollbar
         self.scrollbar_y = ttk.Scrollbar(master, orient=tk.VERTICAL, command=self.yview)
         self.configure(yscroll=self.scrollbar_y.set)
@@ -26,18 +25,25 @@ class TreeviewTable(ttk.Treeview):
         self.records.extend(records)
     
     def add_fields(self, fields: tuple):
-        self.configure(columns=fields)
+        self.configure(columns=('row_number', *fields))
         self.fields.extend(fields)
     
     def draw(self):
         # define headings
+
+        #add row number
+        self.heading('#0', text='Row number', anchor=tk.W)
+        self.column('#0', width = int(1920 * 0.05))
+
         for field in self.fields:
             self.heading(field, text=field)
             # print("field", field)
         
         # add data to the treeview
+        row_number = 0
         for record in self.records:
-            self.insert('', tk.END, values=record)
+            self.insert('', tk.END, values=(row_number, *record))
+            row_number += 1
 
         # print(self.records)
 

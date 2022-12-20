@@ -34,20 +34,3 @@ class ToolbarButton(ttk.Button):
     def add_button(self, text, command):
         button = ttk.Button(self.popup_frame, text=text, style='ToolbarButton.TButton', takefocus=False, command=command)
         button.pack(fill=Y)
-
-
-# window = Tk()
-# frame = Frame(window)
-# toolbar = Toolbar(frame, 500, 25)
-
-# button = ToolbarButton(window, toolbar, text="File")
-# button.pack(side=LEFT, fill=Y)
-# button.add_button('New')
-
-# button = ToolbarButton(window, toolbar, text="Edit")
-# button.pack(side=LEFT, fill=Y)
-# button.add_button('Copy')
-
-# toolbar.pack(side=TOP, fill=X)
-# frame.pack(side=TOP, fill=BOTH, expand=True)
-# mainloop()
