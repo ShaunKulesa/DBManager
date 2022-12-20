@@ -87,8 +87,10 @@ class MainFrame(tk.Frame):
 
         
 
-    def open_file(self):
-        self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
+    def open_file(self, db=None):
+        self.table_explorer.delete(*self.table_explorer.get_children())
+        if not db:
+            self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
 
         with SqliteHandler(self.database_path) as sql:
             tables = sql.list_tables()
@@ -105,6 +107,7 @@ class MainFrame(tk.Frame):
     
     def create_new_file(self):
         file = filedialog.asksaveasfile(filetypes = [('DB File', '*.db*')], defaultextension = [('DB File', '*.db*')])
+        self.open_file(db=file)
         
     def load_table(self, event):
 
