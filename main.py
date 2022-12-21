@@ -77,27 +77,47 @@ class MainFrame(tk.Frame):
         top_level.resizable(False, False)
         top_level.grab_set()
         top_level.focus_set()
-
+        
         entries = []
+        
+        style = ttk.Style()
+
+        # remove the dashed line from Tabs
+        style.configure("Tab", focuscolor=style.configure(".")["background"])
+
+        tabControl = ttk.Notebook(top_level, takefocus=False)
+        edit_record_tab = ttk.Frame(tabControl, takefocus=False)
 
         #display record and allow editing
         for i, field in enumerate(self.table.fields):
-            label = tk.Label(top_level, text=field, bg="white")
+            label = tk.Label(edit_record_tab, text=field, bg="white")
             label.grid(row=i, column=0, sticky="w")
 
-            entry = tk.Entry(top_level)
+            entry = tk.Entry(edit_record_tab)
             entry.grid(row=i, column=1, sticky="w")
             entry.insert(0, record[i])
 
             entries.append(entry)
         
-
         #add buttons
-        save_button = tk.Button(top_level, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in entries]))
+        save_button = tk.Button(edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in entries]))
         save_button.grid(row=len(self.table.fields), column=0, sticky="w")
 
-        cancel_button = tk.Button(top_level, text="Cancel", bg="white", command=top_level.destroy)
+        cancel_button = tk.Button(edit_record_tab, text="Cancel", bg="white", command=top_level.destroy)
         cancel_button.grid(row=len(self.table.fields), column=1, sticky="w")
+
+        tabControl.add(edit_record_tab, text="Edit Record")
+
+
+        #add tab for deleting record
+        delete_record_tab = ttk.Frame(tabControl, takefocus=False)
+
+        delete_button = tk.Button(delete_record_tab, text="Delete Record", bg="white", command=lambda: self.delete_record(record_id))
+        delete_button.grid(row=0, column=0, sticky="w")
+
+        tabControl.add(delete_record_tab, text="Delete Record")
+
+        tabControl.pack(expand=1, fill="both")
 
         
     def edit_record(self, record_id, fields, new_data):
@@ -109,6 +129,11 @@ class MainFrame(tk.Frame):
                 new_data.pop(0)
 
             self.changes[self.table.name].append(("update", record_id, record))
+            self.load_table()
+    
+    def delete_record(self, record_id):
+        with SqliteHandler(self.database_path) as sql:
+            self.changes[self.table.name].append(("delete", record_id, sql.get_record(self.table.name, record_id)))
             self.load_table()
  
     def open_file(self):
@@ -160,6 +185,8 @@ class MainFrame(tk.Frame):
                 for i in self.changes[table_name[0]]:
                     if i[0] == "update":
                         records[i[1]] = i[2]
+                    elif i[0] == "delete":
+                        records.pop(i[1])
             
             elif len(table_name) == 2:
                 fields = sql.get_fields(table_name[0])
@@ -175,6 +202,8 @@ class MainFrame(tk.Frame):
                 for i in self.changes[table_name[0]]:
                     if i[0] == "update":
                         records[i[1]][0] = i[2][fields.index(field)]
+                    elif i[0] == "delete":
+                        records.pop(i[1])
                 
             
 
