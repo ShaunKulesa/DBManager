@@ -72,7 +72,6 @@ class MainFrame(tk.Frame):
         top_level.title("Edit Record")
         top_level.geometry("500x500")
         top_level.resizable(False, False)
-        top_level.grab_set()
         top_level.focus_set()
         
         entries = []
@@ -169,7 +168,7 @@ class MainFrame(tk.Frame):
         table_name = self.table_explorer.focus().split("-?!£$%^&*")
 
         self.table = TreeviewTable(self.middle_frame, table_name[0])
-        self.table.bind("<<TreeviewSelect>>", self.item_selected)
+        self.table.bind("<Double-Button-1>", self.item_selected)
 
         with SqliteHandler(self.database_path) as sql:
             if len(table_name) == 1:                
