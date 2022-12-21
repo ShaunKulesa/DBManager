@@ -27,14 +27,12 @@ class SqliteHandler:
         self.con.commit()
         
     def list_tables(self):
-        
         self.cur.execute("SELECT name FROM sqlite_master")
         tables = [tup[0] for tup in self.cur.fetchall()]
         return tables
 
-
     def add_records(self, table, data):
-        self.cur.execute(f"INSERT INTO {table} VALUES {values}")
+        self.cur.execute(f"INSERT INTO {table} VALUES {data}")
         self.con.commit()
 
     def get_all_records(self, table):
@@ -60,7 +58,6 @@ class SqliteHandler:
         if len(data) != len(fields):
             raise ValueError("incorrect number of fields")
         update = ", ".join([f"{field[1].upper()}={newval}" for field, newval in zip(fields, data) if newval!=None])
-        print(f"""UPDATE '{table}' SET {update} WHERE rowid={row_id}""")
         self.cur.execute(f"""UPDATE '{table}' SET {update} WHERE rowid={row_id}""")
         self.con.commit()
         return True

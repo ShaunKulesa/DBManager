@@ -18,7 +18,7 @@ class Window(tk.Tk):
 
     def switch_frame(self, frame, *args):
         self.frame.destroy()
-        self.frame = frame(self, args)
+        self.frame = frame(self, *args)
         self.frame.pack(side="top", fill="both", expand=True)
 
 class MainFrame(tk.Frame):
@@ -68,6 +68,7 @@ class MainFrame(tk.Frame):
             item = self.table.item(selected_item)
             record_id = item['values'][0]
             record = item['values'][1:]
+            fields = list(self.table.fields)
 
         #add top level
         top_level = tk.Toplevel(self.window, bg="white")
@@ -91,23 +92,25 @@ class MainFrame(tk.Frame):
             entries.append(entry)
         
 
-        if len(record) > 1:
-            save_button = tk.Button(top_level, text="Save", bg="white", command=lambda: self.edit_record(record_id, tuple([entry.get() for entry in entries])))
-            save_button.grid(row=len(self.table.fields), column=0, sticky="w")
-
+        #add buttons
+        save_button = tk.Button(top_level, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in entries]))
+        save_button.grid(row=len(self.table.fields), column=0, sticky="w")
 
         cancel_button = tk.Button(top_level, text="Cancel", bg="white", command=top_level.destroy)
         cancel_button.grid(row=len(self.table.fields), column=1, sticky="w")
 
         
-    def edit_record(self, record_id, new_data):
-        if self.table.name in self.changes:
-            self.changes[self.table.name].append(("update", record_id, new_data))
-        else:
-            self.changes[self.table.name] = [("update", record_id, new_data)]
-        
-        self.load_table()
+    def edit_record(self, record_id, fields, new_data):
+        with SqliteHandler(self.database_path) as sql:
+            record = list(sql.get_record(self.table.name, record_id))
+            
+            for field in fields:
+                record[sql.get_fields(self.table.name).index(field)] = new_data[0]
+                new_data.pop(0)
 
+            self.changes[self.table.name].append(("update", record_id, record))
+            self.load_table()
+ 
     def open_file(self):
         self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
 
@@ -182,5 +185,5 @@ class MainFrame(tk.Frame):
         self.middle_frame.grid_columnconfigure(0, weight=1)
         self.middle_frame.grid_rowconfigure(0, weight=1)
 
-window = Window(MainFrame, 800, 600, None)
+window = Window(MainFrame, 800, 600, "red")
 tk.mainloop()
