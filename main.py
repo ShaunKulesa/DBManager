@@ -1,9 +1,6 @@
-
 from database_backend import SqliteHandler
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
-from PIL import ImageTk, Image
+from tkinter import filedialog, ttk
 from toolbar import Toolbar, ToolbarButton
 from treeview_table import TreeviewTable
 
