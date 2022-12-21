@@ -134,13 +134,13 @@ class MainFrame(tk.Frame):
             self.load_table()
  
     def open_file(self, db=None):
-        self.table_explorer.delete(*self.table_explorer.get_children())
+        self.table_explorer = ttk.Treeview(self.left_frame)
+        self.table_explorer.pack(expand=True, anchor="n", fill="both")
+        #self.table_explorer.delete(*self.table_explorer.get_children())
         if not db:
             self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
         else:
             self.database_path = db
-        self.table_explorer = ttk.Treeview(self.left_frame)
-        self.table_explorer.pack(expand=True, anchor="n", fill="both")
         
         self.table_explorer.heading("#0", text=self.database_path.split("/")[-1].split(".")[0], anchor=tk.W)
         self.table_explorer.bind("<<TreeviewSelect>>", self.load_table)
