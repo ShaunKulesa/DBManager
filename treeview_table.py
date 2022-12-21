@@ -3,11 +3,12 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 class TreeviewTable(ttk.Treeview):
-    def __init__(self, master):
+    def __init__(self, master, name: str):
         super().__init__(master, show='headings')
 
         self.fields = []
         self.records = []
+        self.name = name
 
         #add scrollbar
         self.scrollbar_y = ttk.Scrollbar(master, orient=tk.VERTICAL, command=self.yview)
