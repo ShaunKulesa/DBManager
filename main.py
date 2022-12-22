@@ -59,6 +59,7 @@ class MainFrame(tk.Frame):
 
         self.table = None
         self.table_explorer = None
+        self.top_level = None
     
     def item_selected(self, event):
         for selected_item in self.table.selection():
@@ -68,11 +69,12 @@ class MainFrame(tk.Frame):
             fields = list(self.table.fields)
 
         #add top level
-        top_level = tk.Toplevel(self.window, bg="white")
-        top_level.title("Edit Record")
-        #top_level.geometry("500x500")
-        top_level.resizable(False, False)
-        top_level.focus_set()
+        if not self.top_level:
+            self.top_level = tk.Toplevel(self.window, bg="white")
+            self.top_level.title("Edit Record")
+            #top_level.geometry("500x500")
+            self.top_level.resizable(False, False)
+            self.top_level.focus_set()
         
         entries = []
         
@@ -81,7 +83,7 @@ class MainFrame(tk.Frame):
         # remove the dashed line from Tabs
         style.configure("Tab", focuscolor=style.configure(".")["background"])
 
-        tabControl = ttk.Notebook(top_level, takefocus=False)
+        tabControl = ttk.Notebook(self.top_level, takefocus=False)
         edit_record_tab = ttk.Frame(tabControl, takefocus=False)
         padding = max([len(field) for field in self.table.fields])
         #display record and allow editing
@@ -99,7 +101,7 @@ class MainFrame(tk.Frame):
         save_button = tk.Button(edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in entries]))
         save_button.grid(row=len(self.table.fields), column=0)
 
-        cancel_button = tk.Button(edit_record_tab, text="Cancel", bg="white", command=top_level.destroy)
+        cancel_button = tk.Button(edit_record_tab, text="Cancel", bg="white", command=self.top_level.destroy)
         cancel_button.grid(row=len(self.table.fields), column=1)
 
         tabControl.add(edit_record_tab, text="Edit Record")
