@@ -86,6 +86,7 @@ class MainFrame(tk.Frame):
         tabControl = ttk.Notebook(self.top_level, takefocus=False)
         edit_record_tab = ttk.Frame(tabControl, takefocus=False)
         padding = max([len(field) for field in self.table.fields])
+        
         #display record and allow editing
         for i, field in enumerate(self.table.fields):
             label = tk.Label(edit_record_tab, text=field+" "*(padding-len(field)), bg="white", font=("Consolas", 14))
@@ -135,13 +136,13 @@ class MainFrame(tk.Frame):
             self.load_table()
  
     def open_file(self, db=None):
-        self.table_explorer = ttk.Treeview(self.left_frame)
-        self.table_explorer.pack(expand=True, anchor="n", fill="both")
-        #self.table_explorer.delete(*self.table_explorer.get_children())
         if not db:
             self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
         else:
             self.database_path = db
+
+        self.table_explorer = ttk.Treeview(self.left_frame)
+        self.table_explorer.pack(expand=True, anchor="n", fill="both")
         
         self.table_explorer.heading("#0", text=self.database_path.split("/")[-1].split(".")[0], anchor=tk.W)
         self.table_explorer.bind("<<TreeviewSelect>>", self.load_table)
