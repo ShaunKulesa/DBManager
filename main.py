@@ -76,6 +76,7 @@ class MainFrame(tk.Frame):
             self.top_level.resizable(False, False)
             self.top_level.focus_set()
             self.top_level.attributes('-topmost', 'true')
+            self.top_level.wm_protocol("WM_DELETE_WINDOW", self.on_close_toplevel)
 
             self.entries = []
         
@@ -125,14 +126,16 @@ class MainFrame(tk.Frame):
                 entry.delete(0, 'end')
                 entry.insert(0, record[i])
         
-        
+    def on_close_toplevel(self):
+        self.top_level.destroy()
+        self.top_level = None
 
     def edit_record(self, record_id, fields, new_data):
         with SqliteHandler(self.database_path) as sql:
             record = list(sql.get_record(self.table.name, record_id))
             
             for field in fields:
-                record[sql.get_fields(self.table.name).index(field)] = new_data[0]y
+                record[sql.get_fields(self.table.name).index(field)] = new_data[0]
                 new_data.pop(0)
 
             self.changes[self.table.name].append(("update", record_id, record))
