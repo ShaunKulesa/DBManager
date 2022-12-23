@@ -139,6 +139,7 @@ class MainFrame(tk.Frame):
     def on_close_toplevel(self):
         self.top_level.destroy()
         self.top_level = None
+        self.table.bind("<Double-Button-1>", self.item_selected)
 
     def edit_record(self, record_id, fields, new_data):
         with SqliteHandler(self.database_path) as sql:
