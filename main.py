@@ -60,7 +60,16 @@ class MainFrame(tk.Frame):
         self.table = None
         self.table_explorer = None
         self.top_level = None
-    
+
+        
+    def select_next_item(self):
+        next_item = self.table.next(self.table.selection()[0])
+        self.table.selection_set(next_item)
+        self.item_selected("dummy")
+    def select_prev_item(self):
+        prev_item = self.table.prev(self.table.selection()[0])
+        self.table.selection_set(prev_item)
+        self.item_selected("dummy")
     def item_selected(self, event):
         for selected_item in self.table.selection():
             item = self.table.item(selected_item)
@@ -99,16 +108,17 @@ class MainFrame(tk.Frame):
                 entry.insert(0, record[i])
 
                 self.entries.append(entry)
-            self.table.bind("Button-1>", self.item_selected)
+            self.table.bind("<Button-1>", self.item_selected)
             #add buttons
             save_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
             save_button.grid(row=len(self.table.fields), column=0)
 
             cancel_button = tk.Button(self.edit_record_tab, text="Cancel", bg="white", command=self.top_level.destroy)
             cancel_button.grid(row=len(self.table.fields), column=1)
-            previous_button = tk.Button(self.edit_record_tab, text="Prev", bg="white")
-            next_button = tk.Button(self.edit_record_tab, text="Next", bg="white")
-
+            previous_button = tk.Button(self.edit_record_tab, text="Prev", bg="white", command=self.select_prev_item)
+            next_button = tk.Button(self.edit_record_tab, text="Next", bg="white", command=self.select_next_item)
+            previous_button.grid(row=len(self.table.fields)+1, column=0)
+            next_button.grid(row=len(self.table.fields)+1, column=1)
             self.tabControl.add(self.edit_record_tab, text="Edit Record")
 
             #add tab for deleting record
