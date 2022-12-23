@@ -75,7 +75,8 @@ class MainFrame(tk.Frame):
         #top_level.geometry("500x500")
         self.top_level.resizable(False, False)
         self.top_level.focus_set()
-        self.top_level.grab_set()
+        #self.top_level.grab_set()
+        self.top_level.attributes('-topmost', 'true')
 
         entries = []
         
