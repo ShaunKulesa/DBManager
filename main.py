@@ -92,7 +92,7 @@ class MainFrame(tk.Frame):
             label = tk.Label(edit_record_tab, text=field+" "*(padding-len(field)), bg="white", font=("Consolas", 14))
             label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
 
-            entry = tk.Entry(edit_record_tab, justify='right', font=("Consolas", 14))
+            entry = tk.Entry(edit_record_tab, justify='left', font=("Consolas", 14))
             entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
             entry.insert(0, record[i])
 
