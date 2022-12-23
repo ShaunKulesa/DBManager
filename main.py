@@ -69,13 +69,14 @@ class MainFrame(tk.Frame):
             fields = list(self.table.fields)
 
         #add top level
-        if not self.top_level:
-            self.top_level = tk.Toplevel(self.window, bg="white")
-            self.top_level.title("Edit Record")
-            #top_level.geometry("500x500")
-            self.top_level.resizable(False, False)
-            self.top_level.focus_set()
-        
+        # if not self.top_level:
+        self.top_level = tk.Toplevel(self.window, bg="white")
+        self.top_level.title("Edit Record")
+        #top_level.geometry("500x500")
+        self.top_level.resizable(False, False)
+        self.top_level.focus_set()
+        self.top_level.grab_set()
+
         entries = []
         
         style = ttk.Style()
@@ -107,7 +108,6 @@ class MainFrame(tk.Frame):
 
         tabControl.add(edit_record_tab, text="Edit Record")
 
-
         #add tab for deleting record
         delete_record_tab = ttk.Frame(tabControl, takefocus=False)
 
@@ -118,7 +118,6 @@ class MainFrame(tk.Frame):
 
         tabControl.pack(expand=1, fill="both")
 
-        
     def edit_record(self, record_id, fields, new_data):
         with SqliteHandler(self.database_path) as sql:
             record = list(sql.get_record(self.table.name, record_id))
