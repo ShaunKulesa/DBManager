@@ -65,12 +65,14 @@ class MainFrame(tk.Frame):
     def select_next_item(self):
         next_item = self.table.next(self.table.selection()[0])
         self.table.selection_set(next_item)
-        self.item_selected("dummy")
+        self.item_selected()
+
     def select_prev_item(self):
         prev_item = self.table.prev(self.table.selection()[0])
         self.table.selection_set(prev_item)
-        self.item_selected("dummy")
-    def item_selected(self, event):
+        self.item_selected()
+
+    def item_selected(self, event=None):
         for selected_item in self.table.selection():
             item = self.table.item(selected_item)
             record_id = item['values'][0]
@@ -109,6 +111,7 @@ class MainFrame(tk.Frame):
 
                 self.entries.append(entry)
             self.table.bind("<Button-1>", self.item_selected)
+            
             #add buttons
             save_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
             save_button.grid(row=len(self.table.fields), column=0)
@@ -159,9 +162,9 @@ class MainFrame(tk.Frame):
  
     def open_file(self, db=None):
         if not db:
-            self.database_path = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
-        else:
-            self.database_path = db
+            db = filedialog.askopenfilename(initialdir="", title="Select File", filetypes=(("DB Files", "*.db"), ("All Files", "*.*")))
+        self.database_path = db
+
         if not self.table_explorer:
             self.table_explorer = ttk.Treeview(self.left_frame)
             self.table_explorer.pack(expand=True, anchor="n", fill="both")
@@ -171,15 +174,16 @@ class MainFrame(tk.Frame):
 
         self.table_explorer.heading("#0", text=self.database_path.split("/")[-1].split(".")[0], anchor=tk.W)
         
-
         with SqliteHandler(self.database_path) as sql:
             tables = sql.list_tables()
 
             for table in tables:
-                self.table_explorer.insert('', 'end', text=table, iid=table)
+                #table iid = [;table_name']
+                self.table_explorer.insert('', 'end', text=table, iid=f'[{table}]')
 
                 for field in sql.get_fields(table):
-                    self.table_explorer.insert(table, 'end', text=field, iid=f'{table}-?!£$%^&*{field}')
+                    #field iid = ['table_name', 'field_name']
+                    self.table_explorer.insert(f'[{table}]', 'end', text=field, iid=f'[{table}, {field}]')
         
         #add tables to changes
         for table in tables:
@@ -192,45 +196,44 @@ class MainFrame(tk.Frame):
     def load_table(self, event=None):
         if self.table:
             self.table.destroy()
-        
-        table_name = self.table_explorer.focus().split("-?!£$%^&*")
 
-        self.table = TreeviewTable(self.middle_frame, table_name[0])
+        # get table name or table name and field name
+        selection = self.table_explorer.focus().strip('][').split(', ')
+
+        self.table = TreeviewTable(self.middle_frame, selection[0])
         self.table.bind("<Double-Button-1>", self.item_selected)
 
         with SqliteHandler(self.database_path) as sql:
-            if len(table_name) == 1:                
-                self.table.add_fields(sql.get_fields(table_name[0]))
+            if len(selection) == 1:                
+                self.table.add_fields(sql.get_fields(selection[0]))
 
                 records = []
 
-                for record in sql.get_all_records(table_name[0]):
+                for record in sql.get_all_records(selection[0]):
                     records.append(record)
                 
-                for i in self.changes[table_name[0]]:
+                for i in self.changes[selection[0]]:
                     if i[0] == "update":
                         records[i[1]] = i[2]
                     elif i[0] == "delete":
                         records.pop(i[1])
             
-            elif len(table_name) == 2:
-                fields = sql.get_fields(table_name[0])
-                field = table_name[1]
+            elif len(selection) == 2:
+                fields = sql.get_fields(selection[0])
+                field = selection[1]
 
                 self.table.add_fields([field])
 
                 records = []
 
-                for record in sql.get_all_records(table_name[0]):
+                for record in sql.get_all_records(selection[0]):
                     records.append([record[fields.index(field)]])
                 
-                for i in self.changes[table_name[0]]:
+                for i in self.changes[selection[0]]:
                     if i[0] == "update":
                         records[i[1]][0] = i[2][fields.index(field)]
                     elif i[0] == "delete":
                         records.pop(i[1])
-                
-            
 
             self.table.add_records(records)
 
