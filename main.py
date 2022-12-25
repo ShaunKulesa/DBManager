@@ -113,8 +113,8 @@ class MainFrame(tk.Frame):
             self.table.bind("<Button-1>", self.item_selected)
             
             #add buttons
-            save_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
-            save_button.grid(row=len(self.table.fields), column=0)
+            self.save_record_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
+            self.save_record_button.grid(row=len(self.table.fields), column=0)
 
             cancel_button = tk.Button(self.edit_record_tab, text="Cancel", bg="white", command=self.top_level.destroy)
             cancel_button.grid(row=len(self.table.fields), column=1)
@@ -127,17 +127,22 @@ class MainFrame(tk.Frame):
             #add tab for deleting record
             self.delete_record_tab = ttk.Frame(self.tabControl, takefocus=False)
 
-            delete_button = tk.Button(self.delete_record_tab, text="Delete Record", bg="red", command=lambda: self.delete_record(record_id))
-            delete_button.grid(row=0, column=0, sticky="w")
+            self.delete_record_button = tk.Button(self.delete_record_tab, text="Delete Record", bg="red", command=lambda: self.delete_record(record_id))
+            self.delete_record_button.grid(row=0, column=0, sticky="w")
 
             self.tabControl.add(self.delete_record_tab, text="Delete Record")
 
             self.tabControl.pack(expand=1, fill="both")
 
+            #bind enter to save record
+            self.top_level.bind("<Return>", lambda x:self.save_record_button.invoke())
+
         else:
             for i, entry in enumerate(self.entries):
                 entry.delete(0, 'end')
                 entry.insert(0, record[i])
+                self.save_record_button.config(command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
+                self.delete_record_button.config(command=lambda: self.delete_record(record_id))
         
     def on_close_toplevel(self):
         self.top_level.destroy()
@@ -145,6 +150,7 @@ class MainFrame(tk.Frame):
         self.table.bind("<Double-Button-1>", self.item_selected)
 
     def edit_record(self, record_id, fields, new_data):
+        rownr = self.table.selection()[0]
         with SqliteHandler(self.database_path) as sql:
             record = list(sql.get_record(self.table.name, record_id))
             
@@ -154,6 +160,7 @@ class MainFrame(tk.Frame):
 
             self.changes[self.table.name].append(("update", record_id, record))
             self.load_table()
+        self.table.selection_set(rownr)
     
     def delete_record(self, record_id):
         with SqliteHandler(self.database_path) as sql:
