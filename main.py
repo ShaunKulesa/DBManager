@@ -48,8 +48,6 @@ class MainFrame(tk.Frame):
         self.left_frame = tk.Frame(self, bg="white", highlightbackground="black", highlightthickness=1)
         self.left_frame.grid(row=1, column=0, sticky="nsew")
 
-
-
         self.middle_frame = tk.Frame(self, relief=tk.SUNKEN, bg="white", highlightbackground="black", highlightthickness=1)
         self.middle_frame.grid(row=1, column=1, sticky="nsew")
 
@@ -61,9 +59,9 @@ class MainFrame(tk.Frame):
         self.table_explorer = None
         self.top_level = None
 
-        
     def select_next_item(self):
         next_item = self.table.next(self.table.selection()[0])
+        print(next_item)
         self.table.selection_set(next_item)
         self.item_selected()
 
@@ -73,71 +71,78 @@ class MainFrame(tk.Frame):
         self.item_selected()
 
     def item_selected(self, event=None):
+        if self.top_level:
+            for widget in self.top_level.winfo_children():
+                widget.destroy()
+        
+        if not self.top_level:
+            #add top level
+            self.top_level = tk.Toplevel(self.window, bg="white")
+            self.top_level.title("Edit Record")
+
         for selected_item in self.table.selection():
             item = self.table.item(selected_item)
             record_id = item['values'][0]
+            print(record_id)
             record = item['values'][1:]
             fields = list(self.table.fields)
-
-        #add top level
-        if not self.top_level:
-            self.top_level = tk.Toplevel(self.window, bg="white")
-            self.top_level.title("Edit Record")
-            #top_level.geometry("500x500")
-            self.top_level.resizable(False, False)
-            self.top_level.focus_set()
-            self.top_level.attributes('-topmost', 'true')
-            self.top_level.wm_protocol("WM_DELETE_WINDOW", self.on_close_toplevel)
-
-            self.entries = []
         
-            style = ttk.Style()
+        #top_level.geometry("500x500")
+        self.top_level.resizable(False, False)
+        self.top_level.focus_set()
+        self.top_level.attributes('-topmost', 'true')
+        self.top_level.wm_protocol("WM_DELETE_WINDOW", self.on_close_toplevel)
 
-            # remove the dashed line from Tabs
-            style.configure("Tab", focuscolor=style.configure(".")["background"])
+        self.entries = []
+    
+        style = ttk.Style()
 
-            self.tabControl = ttk.Notebook(self.top_level, takefocus=False)
-            self.edit_record_tab = ttk.Frame(self.tabControl, takefocus=False)
-            padding = max([len(field) for field in self.table.fields])
+        # remove the dashed line from Tabs
+        style.configure("Tab", focuscolor=style.configure(".")["background"])
+
+        self.tabControl = ttk.Notebook(self.top_level, takefocus=False)
+        self.edit_record_tab = ttk.Frame(self.tabControl, takefocus=False)
+        padding = max([len(field) for field in self.table.fields])
+    
+        #display record and allow editing
+        for i, field in enumerate(self.table.fields):
+            label = tk.Label(self.edit_record_tab, text=field+" "*(padding-len(field)), bg="white", font=("Consolas", 14))
+            label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
+
+            entry = tk.Entry(self.edit_record_tab, justify='left', font=("Consolas", 14))
+            entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
+            entry.insert(0, record[i])
+
+            self.entries.append(entry)
+        self.table.bind("<Button-1>", self.item_selected)
         
-            #display record and allow editing
-            for i, field in enumerate(self.table.fields):
-                label = tk.Label(self.edit_record_tab, text=field+" "*(padding-len(field)), bg="white", font=("Consolas", 14))
-                label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
+        #add buttons
+        save_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
+        save_button.grid(row=len(self.table.fields), column=0)
 
-                entry = tk.Entry(self.edit_record_tab, justify='left', font=("Consolas", 14))
-                entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
-                entry.insert(0, record[i])
+        cancel_button = tk.Button(self.edit_record_tab, text="Cancel", bg="white", command=self.top_level.destroy)
+        cancel_button.grid(row=len(self.table.fields), column=1)
+        previous_button = tk.Button(self.edit_record_tab, text="Prev", bg="white", command=self.select_prev_item)
+        next_button = tk.Button(self.edit_record_tab, text="Next", bg="white", command=self.select_next_item)
+        previous_button.grid(row=len(self.table.fields)+1, column=0)
+        next_button.grid(row=len(self.table.fields)+1, column=1)
+        self.tabControl.add(self.edit_record_tab, text="Edit Record")
 
-                self.entries.append(entry)
-            self.table.bind("<Button-1>", self.item_selected)
-            
-            #add buttons
-            save_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
-            save_button.grid(row=len(self.table.fields), column=0)
+        #add tab for deleting record
+        self.delete_record_tab = ttk.Frame(self.tabControl, takefocus=False)
 
-            cancel_button = tk.Button(self.edit_record_tab, text="Cancel", bg="white", command=self.top_level.destroy)
-            cancel_button.grid(row=len(self.table.fields), column=1)
-            previous_button = tk.Button(self.edit_record_tab, text="Prev", bg="white", command=self.select_prev_item)
-            next_button = tk.Button(self.edit_record_tab, text="Next", bg="white", command=self.select_next_item)
-            previous_button.grid(row=len(self.table.fields)+1, column=0)
-            next_button.grid(row=len(self.table.fields)+1, column=1)
-            self.tabControl.add(self.edit_record_tab, text="Edit Record")
+        delete_button = tk.Button(self.delete_record_tab, text="Delete Record", bg="red", command=lambda: self.delete_record(record_id))
+        delete_button.grid(row=0, column=0, sticky="w")
 
-            #add tab for deleting record
-            self.delete_record_tab = ttk.Frame(self.tabControl, takefocus=False)
+        self.tabControl.add(self.delete_record_tab, text="Delete Record")
 
-            delete_button = tk.Button(self.delete_record_tab, text="Delete Record", bg="red", command=lambda: self.delete_record(record_id))
-            delete_button.grid(row=0, column=0, sticky="w")
+        self.tabControl.pack(expand=1, fill="both")
 
-            self.tabControl.add(self.delete_record_tab, text="Delete Record")
-
-            self.tabControl.pack(expand=1, fill="both")
-
-        else:
-            for i, entry in enumerate(self.entries):
-                entry.delete(0, 'end')
-                entry.insert(0, record[i])
+        # else:
+        #     for i, entry in enumerate(self.entries):
+        #         entry.delete(0, 'end')
+        #         entry.insert(0, record[i])
+        #     delete_button.config(command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
         
     def on_close_toplevel(self):
         self.top_level.destroy()
@@ -178,7 +183,7 @@ class MainFrame(tk.Frame):
             tables = sql.list_tables()
 
             for table in tables:
-                #table iid = [;table_name']
+                #table iid = ['able_name']
                 self.table_explorer.insert('', 'end', text=table, iid=f'[{table}]')
 
                 for field in sql.get_fields(table):
