@@ -137,7 +137,7 @@ class MainFrame(tk.Frame):
             #bind enter to save record
             self.top_level.bind("<Return>", lambda x:self.save_record_button.invoke())
 
-        else:
+        if self.top_level:
             for i, entry in enumerate(self.entries):
                 entry.delete(0, 'end')
                 entry.insert(0, record[i])
@@ -163,9 +163,11 @@ class MainFrame(tk.Frame):
         self.table.selection_set(rownr)
     
     def delete_record(self, record_id):
+        rownr = self.table.selection()[0]
         with SqliteHandler(self.database_path) as sql:
             self.changes[self.table.name].append(("delete", record_id, sql.get_record(self.table.name, record_id)))
             self.load_table()
+        self.table.selection_set(rownr)
  
     def open_file(self, db=None):
         if not db:
