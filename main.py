@@ -124,6 +124,8 @@ class MainFrame(tk.Frame):
             next_button.grid(row=len(self.table.fields)+1, column=1)
             self.tabControl.add(self.edit_record_tab, text="Edit Record")
 
+            #add an entry for the record id and place it between the buttons
+
             #add tab for deleting record
             self.delete_record_tab = ttk.Frame(self.tabControl, takefocus=False)
 
@@ -137,7 +139,7 @@ class MainFrame(tk.Frame):
             #bind enter to save record
             self.top_level.bind("<Return>", lambda x:self.save_record_button.invoke())
 
-        if self.top_level:
+        else:
             for i, entry in enumerate(self.entries):
                 entry.delete(0, 'end')
                 entry.insert(0, record[i])
