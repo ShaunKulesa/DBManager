@@ -110,7 +110,7 @@ class MainFrame(tk.Frame):
                 entry.insert(0, record[i])
 
                 self.entries.append(entry)
-            self.table.bind("<Button-1>", self.item_selected)
+            
             
             #add buttons
             self.save_record_button = tk.Button(self.edit_record_tab, text="Save", bg="white", command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
@@ -141,13 +141,13 @@ class MainFrame(tk.Frame):
             for i, entry in enumerate(self.entries):
                 entry.delete(0, 'end')
                 entry.insert(0, record[i])
-                self.save_record_button.config(command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
-                self.delete_record_button.config(command=lambda: self.delete_record(record_id))
+            self.save_record_button.config(command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
+            self.delete_record_button.config(command=lambda: self.delete_record(record_id))
         
     def on_close_toplevel(self):
         self.top_level.destroy()
         self.top_level = None
-        self.table.bind("<Double-Button-1>", self.item_selected)
+
 
     def edit_record(self, record_id, fields, new_data):
         rownr = self.table.selection()[0]
@@ -168,6 +168,7 @@ class MainFrame(tk.Frame):
             self.changes[self.table.name].append(("delete", record_id, sql.get_record(self.table.name, record_id)))
             self.load_table()
         self.table.selection_set(rownr)
+        self.item_selected()
  
     def open_file(self, db=None):
         if not db:
@@ -211,7 +212,6 @@ class MainFrame(tk.Frame):
 
         self.table = TreeviewTable(self.middle_frame, selection[0])
         self.table.bind("<Double-Button-1>", self.item_selected)
-
         with SqliteHandler(self.database_path) as sql:
             if len(selection) == 1:                
                 self.table.add_fields(sql.get_fields(selection[0]))
