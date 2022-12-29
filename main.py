@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 from toolbar import Toolbar, ToolbarButton
 from treeview_table import TreeviewTable
+import sys
 
 class Window(tk.Tk):
     def __init__(self, frame, *args):
@@ -45,26 +46,31 @@ class MainFrame(tk.Frame):
         edit_button.add_button('Undo', None)
         edit_button.add_button('Redo', None)
 
-        self.left_frame = tk.Frame(self, bg="white", highlightbackground="black", highlightthickness=1)
+        self.left_frame = tk.Frame(self, highlightbackground="white", highlightthickness=1)
         self.left_frame.grid(row=1, column=0, sticky="nsew")
 
-        self.middle_frame = tk.Frame(self, relief=tk.SUNKEN, bg="white", highlightbackground="black", highlightthickness=1)
+        self.middle_frame = tk.Frame(self, relief=tk.SUNKEN)
         self.middle_frame.grid(row=1, column=1, sticky="nsew")
 
-        self.right_frame = tk.Frame(self, bg="white", highlightbackground="black", highlightthickness=1)
+        self.right_frame = tk.Frame(self, highlightbackground="white", highlightthickness=1)
         self.right_frame.grid(row=1, column=2, sticky="nsew")
 
-        self.fields_frame = tk.Frame(self.right_frame, bg="white", highlightbackground="black", highlightthickness=1)
+        self.fields_frame = tk.LabelFrame(self.right_frame, text="Record", highlightthickness=1)
         self.fields_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
-        
-        self.fields_frame_title = tk.Label(self.fields_frame, text="Fields", bg="white")
-        self.fields_frame_title.grid(row=0, column=0, sticky="nsew")
 
-        self.fields_frame_delete_button = tk.Button(self.right_frame, text="Delete", bg="white")
-        self.fields_frame_delete_button.grid(row=1, column=1, sticky="nsew")
+        self.save_button = tk.Button(self.right_frame, text="Save", state="disabled")
+        self.save_button.grid(row=1, column=0, sticky="nsew")
+
+        self.delete_button = tk.Button(self.right_frame, text="Delete", state="disabled")
+        self.delete_button.grid(row=1, column=1, sticky="nsew")
+
+        self.sql_console = tk.Text(self.right_frame, bg="white")
+        self.sql_console.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
         self.right_frame.grid_rowconfigure(0, weight=1, uniform="fields_frame")
-
+        self.right_frame.grid_rowconfigure(2, weight=2, uniform="fields_frame")
+        self.right_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
+        self.right_frame.grid_columnconfigure(1, weight=1, uniform="fields_frame")
 
         #add weight to columns and rows
         self.grid_columnconfigure(0, weight=1, uniform="group1")
@@ -76,7 +82,6 @@ class MainFrame(tk.Frame):
         self.table_explorer = None
         self.top_level = None
 
-        
     def select_next_item(self):
         next_item = self.table.next(self.table.selection()[0])
         self.table.selection_set(next_item)
@@ -92,42 +97,29 @@ class MainFrame(tk.Frame):
         record_id = item['values'][0]
         record = item['values'][1:]
 
-        if self.top_level:
-            for i, entry in enumerate(self.entries):
-                entry.delete(0, 'end')
-                entry.insert(0, record[i])
-            self.save_record_button.config(command=lambda: self.edit_record(record_id, fields, [entry.get() for entry in self.entries]))
-            self.delete_record_button.config(command=lambda: self.delete_record(record_id))
-  
-        if not self.top_level:
-            self.top_level = tk.Toplevel(self.window, bg="white")
-            self.top_level.title("Edit Record")
-            self.top_level.resizable(False, False)
-            self.top_level.focus_set()
-            self.top_level.attributes('-topmost', 'true')
-            self.top_level.wm_protocol("WM_DELETE_WINDOW", self.on_close_toplevel)
+        entries = []
 
-            self.entries = []
-            fields = list(self.table.fields)
-            
-            # remove the dashed line from Tabs
-            style = ttk.Style()
-            style.configure("Tab", focuscolor=style.configure(".")["background"])
-
-            self.tabControl = ttk.Notebook(self.top_level, takefocus=False)
-            self.edit_record_tab = ttk.Frame(self.tabControl, takefocus=False)
-            padding = max([len(field) for field in self.table.fields])
+        #delete all widgets in fields_frame
+        for widget in self.fields_frame.winfo_children():
+            widget.destroy()
         
-            #display record and allow editing
-            for i, field in enumerate(self.table.fields):
-                label = tk.Label(self.edit_record_tab, text=field+" "*(padding-len(field)), bg="white", font=("Consolas", 14))
-                label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
+        #add field labels
+        for i, field in enumerate(self.table.fields):
+            field_label = tk.Label(self.fields_frame, text=field, bg="white", anchor="w")
+            field_label.grid(row=i, column=0, sticky="nsew")
+        
+        #add field entries
+        for i, field in enumerate(record):
+            entry = tk.Entry(self.fields_frame, bg="white")
+            entry.insert(0, field)
+            entry.grid(row=i, column=1, sticky="nsew")
+            entries.append(entry)
+        
+        self.fields_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
+        self.fields_frame.grid_columnconfigure(1, weight=4, uniform="fields_frame")
 
-                entry = tk.Entry(self.edit_record_tab, justify='left', font=("Consolas", 14))
-                entry.grid(row=i, column=1, sticky="w", padx=5, pady=2)
-                entry.insert(0, record[i])
-
-                self.entries.append(entry)
+        self.save_button.config(command=lambda: self.edit_record(record_id, self.table.fields, [entry.get() for entry in entries]), state="normal")
+        self.delete_button.config(command=lambda: self.delete_record(record_id), state="normal")
 
     def on_close_toplevel(self):
         self.top_level.destroy()

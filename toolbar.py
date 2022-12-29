@@ -6,7 +6,7 @@ class Toolbar(Frame):
         Frame.__init__(self, parent, background='#922724')
         self.parent = parent
         style = ttk.Style()
-        style.theme_use('clam')
+        style.theme_use('default')
         style.configure('Toolbar.TFrame', background='#922724')
 
         style.configure('ToolbarButton.TButton', background='#922724', foreground='white', borderwidth=0, bg="#922724", relief = "flat", visible=False)
