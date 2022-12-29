@@ -139,12 +139,20 @@ class MainFrame(tk.Frame):
         self.table.selection_set(rownr)
     
     def delete_record(self, record_id):
-        rownr = self.table.selection()[0]
+        row = self.table.selection()[0]
         with SqliteHandler(self.database_path) as sql:
             self.changes[self.table.name].append(("delete", record_id, sql.get_record(self.table.name, record_id)))
             self.load_table()
-        self.table.selection_set(rownr)
+        self.table.selection_set(row)
         self.item_selected()
+
+        #clear fields_frame
+        for widget in self.fields_frame.winfo_children():
+            widget.destroy()
+
+        #disable buttons
+        self.save_button.config(state="disabled")
+        self.delete_button.config(state="disabled")
  
     def open_file(self, db=None):
         if not db:
