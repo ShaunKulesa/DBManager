@@ -27,7 +27,7 @@ class SqliteHandler:
         self.con.commit()
         
     def list_tables(self):
-        self.cur.execute("SELECT name FROM sqlite_master")
+        self.cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [tup[0] for tup in self.cur.fetchall()]
         return tables
 

@@ -80,7 +80,6 @@ class MainFrame(tk.Frame):
 
         self.table = None
         self.table_explorer = None
-        self.top_level = None
 
     def select_next_item(self):
         next_item = self.table.next(self.table.selection()[0])
@@ -113,6 +112,7 @@ class MainFrame(tk.Frame):
             entry = tk.Entry(self.fields_frame, bg="white")
             entry.insert(0, field)
             entry.grid(row=i, column=1, sticky="nsew")
+            entry.bind('<Return>', lambda x:self.save_button.invoke())
             entries.append(entry)
         
         self.fields_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
