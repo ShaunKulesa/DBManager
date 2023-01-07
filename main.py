@@ -195,7 +195,7 @@ class MainFrame(tk.Frame):
         selection = self.table_explorer.focus().strip('][').split(', ')
 
         self.table = TreeviewTable(self.middle_frame, selection[0])
-        self.table.bind("<Double-Button-1>", self.item_selected)
+        self.table.bind("<<TreeviewSelect>>", self.item_selected)
         with SqliteHandler(self.database_path) as sql:
             if len(selection) == 1:                
                 self.table.add_fields(sql.get_fields(selection[0]))
