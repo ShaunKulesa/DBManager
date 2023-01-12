@@ -23,7 +23,7 @@ class MainFrame(tk.Frame):
     def __init__(self, window: tk.Tk, width, height, background_color):
         tk.Frame.__init__(self, window, width=width, height=height, bg=background_color)
 
-        # self.changes = {"table_name": [("update", record_id, (new_data)) or ("insert", record_id, (new_data)) or ("delete", record_id, (new_data))]}
+        # self.changes = {"table_name": [("update", record_id, (new_data), (index range)) or ("insert", record_id, (new_data)) or ("delete", (record_ids))]}
         self.changes = {}
 
         self.window = window
@@ -92,7 +92,7 @@ class MainFrame(tk.Frame):
         self.item_selected()
 
     def item_selected(self, event=None):
-        item = self.table.item(self.table.selection())
+        item = self.table.item(self.table.selection()[0])
         record_id = item['values'][0]
         record = item['values'][1:]
 
@@ -118,33 +118,26 @@ class MainFrame(tk.Frame):
         self.fields_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
         self.fields_frame.grid_columnconfigure(1, weight=4, uniform="fields_frame")
 
-        self.save_button.config(command=lambda: self.edit_record(record_id, self.table.fields, [entry.get() for entry in entries]), state="normal")
-        self.delete_button.config(command=lambda: self.delete_record(record_id), state="normal")
+        field_positions = []
+        for field in self.table.fields:
+            with SqliteHandler(self.database_path) as sql:
+                if field in sql.get_fields(self.table.name):
+                    field_positions.append(self.table.fields.index(field))    
 
-    def on_close_toplevel(self):
-        self.top_level.destroy()
-        self.top_level = None
+        self.save_button.config(command=lambda: self.update_record(record_id, [entry.get() for entry in entries], [field_positions[0], field_positions[-1]]), state="normal")
+        self.delete_button.config(command=lambda: self.delete_record([record_id]), state="normal")
 
-    def edit_record(self, record_id, fields, new_data):
-        rownr = self.table.selection()[0]
-        with SqliteHandler(self.database_path) as sql:
-            record = list(sql.get_record(self.table.name, record_id))
-            
-            for field in fields:
-                record[sql.get_fields(self.table.name).index(field)] = new_data[0]
-                new_data.pop(0)
+    def update_record(self, row_number, new_data, index_range):
+        self.changes[self.table.name].append(("update", row_number, new_data, index_range))
 
-            self.changes[self.table.name].append(("update", record_id, record))
-            self.load_table()
-        self.table.selection_set(rownr)
-    
-    def delete_record(self, record_id):
-        row = self.table.selection()[0]
-        with SqliteHandler(self.database_path) as sql:
-            self.changes[self.table.name].append(("delete", record_id, sql.get_record(self.table.name, record_id)))
-            self.load_table()
-        self.table.selection_set(row)
-        self.item_selected()
+        # reload the table widget
+        self.load_table()
+
+    def delete_record(self, row_numbers: tuple):
+        self.changes[self.table.name].append(("delete", row_numbers))
+        
+        # reload the table widget
+        self.load_table()
 
         #clear fields_frame
         for widget in self.fields_frame.winfo_children():
@@ -172,7 +165,7 @@ class MainFrame(tk.Frame):
             tables = sql.list_tables()
 
             for table in tables:
-                #table iid = [;table_name']
+                #table iid = ['table_name']
                 self.table_explorer.insert('', 'end', text=table, iid=f'[{table}]')
 
                 for field in sql.get_fields(table):
@@ -186,49 +179,84 @@ class MainFrame(tk.Frame):
     def create_new_file(self):
         file = filedialog.asksaveasfile(filetypes = [('DB File', '*.db*')], defaultextension = [('DB File', '*.db*')])
         self.open_file(db=file.name)
-        
+    
+    def popup(self, event=None):
+        #set table selection as iid if the target item is not seleccted with left click
+        iid = self.table.identify_row(event.y)
+        if iid not in self.table.selection():
+            self.table.selection_set(iid)
+
+        # loop through items and get their value
+        items_iid = self.table.selection()
+        items_values = [] # items values = [[rownumber, *record data]]
+
+        for iid in items_iid:
+            items_values.append(self.table.item(iid)['values'])
+
+        #create popup menu
+        popup = tk.Frame(self.master)
+        popup.place(x=event.x_root, y=event.y_root)
+
+        #add buttons
+        if len(items_iid) == 1:
+            edit_button = tk.Button(popup, text="Edit", command=lambda: self.edit_record(items_values[0][0], self.table.fields, items_values[0][1:]))
+            edit_button.pack()
+  
     def load_table(self, event=None):
         if self.table:
             self.table.destroy()
+
+        #clear fields_frame
+        for widget in self.fields_frame.winfo_children():
+            widget.destroy()
 
         # get table name or table name and field name
         selection = self.table_explorer.focus().strip('][').split(', ')
 
         self.table = TreeviewTable(self.middle_frame, selection[0])
         self.table.bind("<<TreeviewSelect>>", self.item_selected)
+        self.table.bind("<Button-3>", self.popup)
+        
         with SqliteHandler(self.database_path) as sql:
-            if len(selection) == 1:                
-                self.table.add_fields(sql.get_fields(selection[0]))
-
-                records = []
-
-                for record in sql.get_all_records(selection[0]):
-                    records.append(record)
-                
-                for i in self.changes[selection[0]]:
-                    if i[0] == "update":
-                        records[i[1]] = i[2]
-                    elif i[0] == "delete":
-                        records.pop(i[1])
+            records = sql.get_all_records(selection[0])
+            full_fields = sql.get_fields(selection[0])
             
-            elif len(selection) == 2:
+            if len(selection) == 1:
                 fields = sql.get_fields(selection[0])
-                field = selection[1]
+        
+            if len(selection) == 2:
+                fields = [selection[1]] 
+        
+        # selected fields index in full fields
+        field_positions = []
+        for field in fields:
+            field_positions.append(full_fields.index(field))
 
-                self.table.add_fields([field])
+        print(full_fields)
+        fields_sliced_index = slice(full_fields.index(*[fields[0]]), full_fields.index(*[fields[-1]]) + 1)
+            
+        for change in self.changes[self.table.name]:
+            if change[0] == "delete":
+                for row_number in change[1]:
+                    records.pop(row_number)
+            
+            if change[0] == "update":
+                row_number = change[1]
+                index_range = change[3]
 
-                records = []
-
-                for record in sql.get_all_records(selection[0]):
-                    records.append([record[fields.index(field)]])
+                new_data = change[2]
                 
-                for i in self.changes[selection[0]]:
-                    if i[0] == "update":
-                        records[i[1]][0] = i[2][fields.index(field)]
-                    elif i[0] == "delete":
-                        records.pop(i[1])
+                records[row_number] = list(records[row_number][:index_range[0]]) + list(new_data) + list(records[row_number][index_range[1]:])
 
-            self.table.add_records(records)
+        new_records = []    
+        #choose only the record data fro the fields necessary
+        for record in records:
+            new_records.append(record[fields_sliced_index])
+        
+        records = new_records
+
+        self.table.add_records(records)
+        self.table.add_fields(fields)
 
         self.table.draw()
         self.table.grid(row=0, column=0, sticky="nsew")
