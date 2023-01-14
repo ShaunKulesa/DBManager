@@ -180,7 +180,7 @@ class MainFrame(tk.Frame):
         file = filedialog.asksaveasfile(filetypes = [('DB File', '*.db*')], defaultextension = [('DB File', '*.db*')])
         self.open_file(db=file.name)
     
-    def popup(self, event=None):
+    def table_popup(self, event=None):
         #set table selection as iid if the target item is not seleccted with left click
         iid = self.table.identify_row(event.y)
         if iid not in self.table.selection():
@@ -198,9 +198,9 @@ class MainFrame(tk.Frame):
         popup.place(x=event.x_root, y=event.y_root)
 
         #add buttons
-        if len(items_iid) == 1:
-            edit_button = tk.Button(popup, text="Edit", command=lambda: self.edit_record(items_values[0][0], self.table.fields, items_values[0][1:]))
-            edit_button.pack()
+        print([item[0] for item in items_values])
+        delete_button = tk.Button(popup, text="Delete", command=lambda: self.delete_record([item[0] for item in items_values]))
+        delete_button.pack()
   
     def load_table(self, event=None):
         if self.table:
@@ -215,7 +215,7 @@ class MainFrame(tk.Frame):
 
         self.table = TreeviewTable(self.middle_frame, selection[0])
         self.table.bind("<<TreeviewSelect>>", self.item_selected)
-        self.table.bind("<Button-3>", self.popup)
+        self.table.bind("<Button-3>", self.table_popup)
         
         with SqliteHandler(self.database_path) as sql:
             records = sql.get_all_records(selection[0])
@@ -232,12 +232,11 @@ class MainFrame(tk.Frame):
         for field in fields:
             field_positions.append(full_fields.index(field))
 
-        print(full_fields)
         fields_sliced_index = slice(full_fields.index(*[fields[0]]), full_fields.index(*[fields[-1]]) + 1)
             
         for change in self.changes[self.table.name]:
             if change[0] == "delete":
-                for row_number in change[1]:
+                for row_number in reversed(change[1]):
                     records.pop(row_number)
             
             if change[0] == "update":
