@@ -7,24 +7,33 @@ class SqliteHandler:
     def __init__(self, path):
 
         self.path = path
-        
-    def __enter__(self):
-        
-        self.path = pathlib.Path(self.path)
+
+        # self.path = pathlib.Path(self.path)
         self.con = sqlite3.connect(self.path)
         self.cur = self.con.cursor()
-        return self
+        
+    # def __enter__(self):
+        
+    #     self.path = pathlib.Path(self.path)
+    #     self.con = sqlite3.connect(self.path)
+    #     self.cur = self.con.cursor()
+    #     return self
     
-    def __exit__(self, exc_type, exc_value, traceback):
-
-        self.con.close()
+    # def __exit__(self, exc_type, exc_value, traceback):
+    #     self.con.close()
+    
+    def begin(self):
+        self.cur.execute("BEGIN")
+    
+    def end(self):
+        self.con.execute("END")
 
     def add_table(self, name, fields):
         
         if not isinstance(fields,tuple):
             fields = tuple(fields)
         self.cur.execute(f"CREATE TABLE IF NOT EXISTS {name} {fields}")
-        self.con.commit()
+        # self.con.commit()
         
     def list_tables(self):
         self.cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name!='sqlite_stat1'")
@@ -33,7 +42,7 @@ class SqliteHandler:
 
     def add_records(self, table, data):
         self.cur.execute(f"INSERT INTO {table} VALUES {data}")
-        self.con.commit()
+        # self.con.commit()
 
     def get_all_records(self, table):
         self.cur.execute(f"SELECT * FROM {table} ;")
@@ -43,7 +52,7 @@ class SqliteHandler:
         row_id = self.get_all_records(table)[pos][1][0]
         table = ''.join( chr for chr in table if chr.isalnum() )
         self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
-        self.con.commit()
+        # self.con.commit()
 
     def get_record(self, table, pos):
         return self.get_all_records(table)[pos]    
@@ -59,7 +68,7 @@ class SqliteHandler:
             raise ValueError("incorrect number of fields")
         update = ", ".join([f"{field[1].upper()}={newval}" for field, newval in zip(fields, data) if newval!=None])
         self.cur.execute(f"""UPDATE '{table}' SET {update} WHERE rowid={row_id}""")
-        self.con.commit()
+        # self.con.commit()
         return True
 
 
