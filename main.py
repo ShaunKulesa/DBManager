@@ -128,7 +128,8 @@ class MainFrame(tk.Frame):
         self.delete_button.config(command=lambda: self.delete_record([record_id]), state="normal")
 
     def update_record(self, row_number, new_data, index_range):
-        self.changes[self.table.name].append(("update", row_number, new_data, index_range))
+        print("index_range: ", index_range)
+        self.changes[self.table.name].append(("update", [row_number], new_data, index_range))
 
         # reload the table widget
         self.load_table()
@@ -198,7 +199,6 @@ class MainFrame(tk.Frame):
         popup.place(x=event.x_root, y=event.y_root)
 
         #add buttons
-        print([item[0] for item in items_values])
         delete_button = tk.Button(popup, text="Delete", command=lambda: self.delete_record([item[0] for item in items_values]))
         delete_button.pack()
   
@@ -233,19 +233,45 @@ class MainFrame(tk.Frame):
             field_positions.append(full_fields.index(field))
 
         fields_sliced_index = slice(full_fields.index(*[fields[0]]), full_fields.index(*[fields[-1]]) + 1)
-            
-        for change in self.changes[self.table.name]:
-            if change[0] == "delete":
-                for row_number in reversed(change[1]):
-                    records.pop(row_number)
-            
-            if change[0] == "update":
-                row_number = change[1]
-                index_range = change[3]
+        
 
-                new_data = change[2]
+        # for change in self.changes[self.table.name]:
+        #     if change[0] == "delete":
+        #         for row_number in reversed(change[1]):
+        #             records.pop(row_number)
+            
+        #     if change[0] == "update":
+        #         row_number = change[1]
+        #         index_range = change[3]
+
+        #         new_data = change[2]
                 
-                records[row_number] = list(records[row_number][:index_range[0]]) + list(new_data) + list(records[row_number][index_range[1]:])
+        #         records[row_number] = list(records[row_number][:index_range[0]]) + list(new_data) + list(records[row_number][index_range[1]:])
+            
+        # index_changes = [] # [[row_number, +1 or -1]]
+
+        for change in self.changes[self.table.name]:
+            row_numbers = list(change[1])
+            row_number_change = 0
+            change_command = change[0]
+
+            for row_number in row_numbers:
+                if change_command == "delete":
+                    row_number += row_number_change
+                    records.pop(row_number)
+                    row_number_change -= 1
+                
+                if change_command == "update":
+                    new_data = change[2]
+                    index_range = change[3]
+
+                    records[row_number] = list(records[row_number][:index_range[0]]) + list(new_data) + list(records[row_number][index_range[1]:])
+    
+              
+
+
+
+
 
         new_records = []    
         #choose only the record data fro the fields necessary
