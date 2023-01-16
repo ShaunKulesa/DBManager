@@ -5,22 +5,17 @@ import pathlib
 class SqliteHandler:
 
     def __init__(self, path):
-
         self.path = path
-
-        # self.path = pathlib.Path(self.path)
+        
+    def __enter__(self):
+        
+        self.path = pathlib.Path(self.path)
         self.con = sqlite3.connect(self.path)
         self.cur = self.con.cursor()
-        
-    # def __enter__(self):
-        
-    #     self.path = pathlib.Path(self.path)
-    #     self.con = sqlite3.connect(self.path)
-    #     self.cur = self.con.cursor()
-    #     return self
+        return self
     
-    # def __exit__(self, exc_type, exc_value, traceback):
-    #     self.con.close()
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.con.close()
     
     def begin(self):
         self.cur.execute("BEGIN")
@@ -29,7 +24,6 @@ class SqliteHandler:
         self.con.execute("END")
 
     def add_table(self, name, fields):
-        
         if not isinstance(fields,tuple):
             fields = tuple(fields)
         self.cur.execute(f"CREATE TABLE IF NOT EXISTS {name} {fields}")
@@ -49,10 +43,15 @@ class SqliteHandler:
         return self.cur.fetchall()
 
     def delete_record(self, table, pos):
-        row_id = self.get_all_records(table)[pos][1][0]
+        row_id = self.get_all_records(table)[pos][0]
         table = ''.join( chr for chr in table if chr.isalnum() )
         self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
-        # self.con.commit()
+    
+    def delete_records(self, table, slice):
+        row_ids = [record[0] for record in self.get_all_records(table)[slice]]
+        table = ''.join( chr for chr in table if chr.isalnum() )
+        # print("row"row_ids)
+        self.cur.execute(f"DELETE FROM {table} WHERE rowid IN {tuple(row_ids)}")
 
     def get_record(self, table, pos):
         return self.get_all_records(table)[pos]    

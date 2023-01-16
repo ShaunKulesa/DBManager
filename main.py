@@ -23,12 +23,11 @@ class MainFrame(tk.Frame):
     def __init__(self, window: tk.Tk, width, height, background_color):
         tk.Frame.__init__(self, window, width=width, height=height, bg=background_color)
 
-        self.transactions = []
-
         self.window = window
         self.width = width
         self.height = height
-        self.database_path = None
+        self.database_path: str = None
+        self.table_transactions = {} # {table_name: [('delete_record', row_number: int), ('delete_records', row_numbers_slice: slice)]}
 
         self.window.update()
 
@@ -124,14 +123,29 @@ class MainFrame(tk.Frame):
                     field_positions.append(self.table.fields.index(field))    
 
         self.save_button.config(command=lambda: self.update_record(record_id, [entry.get() for entry in entries], [field_positions[0], field_positions[-1]]), state="normal")
-        self.delete_button.config(command=lambda: self.delete_record([record_id]), state="normal")
+        self.delete_button.config(command=lambda: self.delete_record(self.table.name, record_id), state="normal")
 
     def update_record(self, row_number, new_data, index_range):
         # reload the table widget
         self.load_table()
 
-    def delete_record(self, row_numbers: tuple):
-       
+    def delete_record(self, table_name, row_number: int):
+        self.table_transactions[table_name].append(('delete_record', row_number))
+
+        # reload the table widget
+        self.load_table()
+
+        #clear fields_frame
+        for widget in self.fields_frame.winfo_children():
+            widget.destroy()
+
+        #disable buttons
+        self.save_button.config(state="disabled")
+        self.delete_button.config(state="disabled")
+    
+    def delete_records(self, table_name, row_numbers_slice: slice):
+        self.table_transactions[table_name].append(('delete_records', row_numbers_slice))
+
         # reload the table widget
         self.load_table()
 
@@ -170,7 +184,7 @@ class MainFrame(tk.Frame):
         
         #add tables to changes
         for table in tables:
-            self.changes[table] = []
+            self.table_transactions[table] = []
     
     def create_new_file(self):
         file = filedialog.asksaveasfile(filetypes = [('DB File', '*.db*')], defaultextension = [('DB File', '*.db*')])
@@ -194,7 +208,7 @@ class MainFrame(tk.Frame):
         popup.place(x=event.x_root, y=event.y_root)
 
         #add buttons
-        delete_button = tk.Button(popup, text="Delete", command=lambda: self.delete_record([item[0] for item in items_values]))
+        delete_button = tk.Button(popup, text="Delete", command=lambda: self.delete_records(self.table.name, slice(items_values[0][0], items_values[-1][0]+1)))
         delete_button.pack()
   
     def load_table(self, event=None):
@@ -213,29 +227,20 @@ class MainFrame(tk.Frame):
         self.table.bind("<Button-3>", self.table_popup)
         
         with SqliteHandler(self.database_path) as sql:
-            records = sql.get_all_records(selection[0])
-            full_fields = sql.get_fields(selection[0])
+            for transaction in self.table_transactions[selection[0]]:
+                if transaction[0] == 'delete_record':
+                    print(transaction[1])
+                    sql.delete_record(selection[0], transaction[1])
+                
+                elif transaction[0] == 'delete_records':
+                    sql.delete_records(selection[0], transaction[1])
+                
+                # elif transaction[0] == 'update_record':
             
-            if len(selection) == 1:
-                fields = sql.get_fields(selection[0])
+            records = sql.get_all_records(selection[0])
+            fields = sql.get_fields(selection[0])
         
-            if len(selection) == 2:
-                fields = [selection[1]] 
         
-        # selected fields index in full fields
-        field_positions = []
-        for field in fields:
-            field_positions.append(full_fields.index(field))
-
-        fields_sliced_index = slice(full_fields.index(*[fields[0]]), full_fields.index(*[fields[-1]]) + 1)
-        
-        new_records = []    
-        #choose only the record data fro the fields necessary
-        for record in records:
-            new_records.append(record[fields_sliced_index])
-        
-        records = new_records
-
         self.table.add_records(records)
         self.table.add_fields(fields)
 
