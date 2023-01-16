@@ -12,6 +12,15 @@ class SqliteHandler:
         self.path = pathlib.Path(self.path)
         self.con = sqlite3.connect(self.path)
         self.cur = self.con.cursor()
+
+        #create a dictionary to convert database types to python types
+        self.types = {
+            "INTEGER": int,
+            "TEXT": str,
+            "REAL": float,
+            "BLOB": bytes
+        }
+        # self.types
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
@@ -61,15 +70,30 @@ class SqliteHandler:
         return [(i[1]) for i in self.cur.fetchall()]
 
     def edit_record(self, table, pos, data):
-        fields = self.get_fields(table)
-        row_id = self.get_all_records(table)[pos][1][0]
-        if len(data) != len(fields):
-            raise ValueError("incorrect number of fields")
-        update = ", ".join([f"{field[1].upper()}={newval}" for field, newval in zip(fields, data) if newval!=None])
-        self.cur.execute(f"""UPDATE '{table}' SET {update} WHERE rowid={row_id}""")
-        # self.con.commit()
-        return True
+        row_id = self.get_all_records(table)[pos][0]
+        table = ''.join( chr for chr in table if chr.isalnum() )
+        if not isinstance(data, tuple):
+            data = list(data)
+        
+        print("data", data)
 
+        
+        for i in range(len(data)):
+            #get the type of the field
+            self.cur.execute(f"PRAGMA table_xinfo({table})")
+            field_type = self.cur.fetchall()
+            # print("field_type", field_type)
+            #convert the data to the correct type
+            # data[i] = 
+            # data[i] = f"{self.get_fields(table)[i]} = {self.types[field_type](data[i])}"
+            # print(f"{self.get_fields(table)[i]} = {data[i]}")
+        
+        # print("set data", data)
+
+        print(f"UPDATE {table} SET {[f'{self.get_fields(table)[i]} = {data[i]}' for i in range(len(data))]} WHERE rowid={row_id}")
+        # self.cur.execute(f"UPDATE {table} SET {', '.join(data)} WHERE rowid={row_id}")
+     
+        return self.get_record(table, pos)
 
 # with SqliteHandler("./database.db") as sql:
 

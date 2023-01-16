@@ -27,7 +27,7 @@ class MainFrame(tk.Frame):
         self.width = width
         self.height = height
         self.database_path: str = None
-        self.table_transactions = {} # {table_name: [('delete_record', row_number: int), ('delete_records', row_numbers_slice: slice)]}
+        self.table_transactions = {} # {table_name: [('delete_record', row_number: int), ('delete_records', row_numbers_slice: slice), (update_record, row_number: int, new_data: tuple)]}
 
         self.window.update()
 
@@ -90,7 +90,7 @@ class MainFrame(tk.Frame):
         self.item_selected()
 
     def item_selected(self, event=None):
-        item = self.table.item(self.table.selection()[0])
+        item:tuple = self.table.item(self.table.selection()[0])
         record_id = item['values'][0]
         record = item['values'][1:]
 
@@ -120,12 +120,14 @@ class MainFrame(tk.Frame):
         for field in self.table.fields:
             with SqliteHandler(self.database_path) as sql:
                 if field in sql.get_fields(self.table.name):
-                    field_positions.append(self.table.fields.index(field))    
+                    field_positions.append(self.table.fields.index(field))
 
-        self.save_button.config(command=lambda: self.update_record(record_id, [entry.get() for entry in entries], [field_positions[0], field_positions[-1]]), state="normal")
+        self.save_button.config(command=lambda: self.update_record(self.table.name, record_id, list(record[:field_positions[0]] + [entries[i].get() for i in field_positions] + record[field_positions[-1]+1:])), state="normal")
         self.delete_button.config(command=lambda: self.delete_record(self.table.name, record_id), state="normal")
 
-    def update_record(self, row_number, new_data, index_range):
+    def update_record(self, table_name, row_number, data):
+        self.table_transactions[table_name].append(('update_record', row_number, data))
+
         # reload the table widget
         self.load_table()
 
@@ -235,9 +237,12 @@ class MainFrame(tk.Frame):
                 elif transaction[0] == 'delete_records':
                     sql.delete_records(selection[0], transaction[1])
                 
-                # elif transaction[0] == 'update_record':
+                elif transaction[0] == 'update_record':
+                    print(transaction[1], transaction[2])
+                    sql.edit_record(selection[0], transaction[1], transaction[2])
             
             records = sql.get_all_records(selection[0])
+            print(records)
             fields = sql.get_fields(selection[0])
         
         
