@@ -92,9 +92,12 @@ class MainFrame(tk.Frame):
     def item_selected(self, event=None):
         item:tuple = self.table.item(self.table.selection()[0])
         record_id = item['values'][0]
-        record = item['values'][1:]
+
+        with SqliteHandler(self.database_path) as db:
+            record = list(db.get_record(self.table.name, record_id))
 
         entries = []
+
 
         #delete all widgets in fields_frame
         for widget in self.fields_frame.winfo_children():
@@ -106,30 +109,51 @@ class MainFrame(tk.Frame):
             field_label.grid(row=i, column=0, sticky="nsew")
         
         #add field entries
-        for i, field in enumerate(record):
+        for i, field in enumerate(self.table.fields):
             entry = tk.Entry(self.fields_frame, bg="white")
-            entry.insert(0, field)
+            entry.insert(0, record[self.table_fields.index(field)])
             entry.grid(row=i, column=1, sticky="nsew")
-            entry.bind('<Return>', lambda x:self.save_button.invoke())
             entries.append(entry)
         
         self.fields_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
         self.fields_frame.grid_columnconfigure(1, weight=4, uniform="fields_frame")
-
+        print(self.table.name)
         field_positions = []
         for field in self.table.fields:
             with SqliteHandler(self.database_path) as sql:
                 if field in sql.get_fields(self.table.name):
-                    field_positions.append(self.table.fields.index(field))
+                    field_positions.append(sql.get_fields(self.table.name).index(field))
 
-        self.save_button.config(command=lambda: self.update_record(self.table.name, record_id, list(record[:field_positions[0]] + [entries[i].get() for i in field_positions] + record[field_positions[-1]+1:])), state="normal")
+        self.save_button.config(command=lambda: self.update_record(self.table.name, record_id, list()), 
+        state="normal")
         self.delete_button.config(command=lambda: self.delete_record(self.table.name, record_id), state="normal")
+        
+        print(self.join_record(record, field_positions, entries))
+        # print(self.table.name, record_id, list(record[field_positions[0]:] + [entry.get() for entry in entries])) #+ record[field_positions[-1]+1:]))
+
+    def join_record(self, record, field_positions, entries):
+        with SqliteHandler(self.database_path) as sql:
+            fields = sql.get_fields(self.table.name)
+
+        for i, item in enumerate(record):
+            if fields.index(fields[i]) in field_positions:
+                record[i] = entries.pop(0).get()
+        return record
+
 
     def update_record(self, table_name, row_number, data):
         self.table_transactions[table_name].append(('update_record', row_number, data))
 
         # reload the table widget
         self.load_table()
+        
+        #clear fields_frame
+        for widget in self.fields_frame.winfo_children():
+            widget.destroy()
+
+        #disable buttons
+        self.save_button.config(state="disabled")
+        self.delete_button.config(state="disabled")
 
     def delete_record(self, table_name, row_number: int):
         self.table_transactions[table_name].append(('delete_record', row_number))
@@ -231,21 +255,22 @@ class MainFrame(tk.Frame):
         with SqliteHandler(self.database_path) as sql:
             for transaction in self.table_transactions[selection[0]]:
                 if transaction[0] == 'delete_record':
-                    print(transaction[1])
                     sql.delete_record(selection[0], transaction[1])
                 
                 elif transaction[0] == 'delete_records':
                     sql.delete_records(selection[0], transaction[1])
                 
                 elif transaction[0] == 'update_record':
-                    print(transaction[1], transaction[2])
                     sql.edit_record(selection[0], transaction[1], transaction[2])
             
             records = sql.get_all_records(selection[0])
-            print(records)
-            fields = sql.get_fields(selection[0])
-        
-        
+
+            if len(selection) == 1:
+                fields = sql.get_fields(selection[0])
+            else:
+                fields = [selection[1]]
+                records = [[record[sql.get_fields(self.table.name).index(fields[0])]] for record in records]
+            
         self.table.add_records(records)
         self.table.add_fields(fields)
 
