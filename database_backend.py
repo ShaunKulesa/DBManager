@@ -69,20 +69,24 @@ class SqliteHandler:
         self.cur.execute(f"PRAGMA table_xinfo({table})")
         return [(i[1]) for i in self.cur.fetchall()]
 
-    def edit_record(self, table, pos, data):
-        fields = self.get_fields(table)
-        # print("fields", fields)
-        row_id = self.get_all_records(table)[pos][0]
-        # print(data)
-        for i in range(len(data)):
-            if type(self.get_all_records(table)[pos][i]) is str:
-                data[i] = f"'{data[i]}'"
+    # def edit_record(self, table, pos, data):
+    #     fields = self.get_fields(table)
+    #     # print("fields", fields)
+    #     row_id = self.get_all_records(table)[pos][0]
+    #     # print(data)
+    #     for i in range(len(data)):
+    #         if type(self.get_all_records(table)[pos][i]) is str:
+    #             data[i] = f"'{data[i]}'"
 
-            data[i] = f"{fields[i]}={data[i]}"
-        data = ', '.join(data)
-        # self.cur.execute(f"UPDATE {table} SET {data} WHERE rowid={row_id}") 
-        # print(f"UPDATE {table} SET {data} WHERE rowid={row_id}")
-        # print(f"UPDATE {table} SET {data} WHERE rowid={row_id}")
+    #         data[i] = f"{fields[i]}={data[i]}"
+    #     data = ', '.join(data)
+
+    def update_record(self, table, position, fields, data):
+        row_id = self.get_all_records(table)[position][0]
+        set_data = ', '.join([f'{i}={j}' for i, j in zip(fields, data)])
+        sql_statement = f"UPDATE {table} SET {set_data} where rowid={row_id}"
+        # print(sql_statement)
+        self.cur.execute(sql_statement)
 
 # with SqliteHandler("./database.db") as sql:
 

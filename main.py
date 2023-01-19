@@ -27,7 +27,7 @@ class MainFrame(tk.Frame):
         self.width = width
         self.height = height
         self.database_path: str = None
-        self.table_transactions = {} # {table_name: [('delete_record', row_number: int), ('delete_records', row_numbers_slice: slice), (update_record, row_number: int, new_data: tuple)]}
+        self.table_transactions = {} # {table_name: [('delete_record', row_number: int), ('delete_records', row_numbers_slice: slice), (update_record, row_number: int, fields: tuple, new_data: tuple)]}
 
         self.window.update()
 
@@ -90,59 +90,37 @@ class MainFrame(tk.Frame):
         self.item_selected()
 
     def item_selected(self, event=None):
-        item:tuple = self.table.item(self.table.selection()[0])
-        record_id = item['values'][0]
+        item = self.table.item(self.table.selection()[0])
+        record = item['values'][1:]
+        row_number = item['values'][0]
 
-        with SqliteHandler(self.database_path) as db:
-            record = list(db.get_record(self.table.name, record_id))
+        fields = self.table.fields
 
         entries = []
-
 
         #delete all widgets in fields_frame
         for widget in self.fields_frame.winfo_children():
             widget.destroy()
-        
-        #add field labels
+               
+        #add field labels and entries
         for i, field in enumerate(self.table.fields):
             field_label = tk.Label(self.fields_frame, text=field, bg="white", anchor="w")
             field_label.grid(row=i, column=0, sticky="nsew")
-        
-        #add field entries
-        for i, field in enumerate(self.table.fields):
+
             entry = tk.Entry(self.fields_frame, bg="white")
-            entry.insert(0, record[self.table_fields.index(field)])
+            entry.insert(0, record[self.table.fields.index(field)])
             entry.grid(row=i, column=1, sticky="nsew")
             entries.append(entry)
         
         self.fields_frame.grid_columnconfigure(0, weight=1, uniform="fields_frame")
         self.fields_frame.grid_columnconfigure(1, weight=4, uniform="fields_frame")
-        print(self.table.name)
-        field_positions = []
-        for field in self.table.fields:
-            with SqliteHandler(self.database_path) as sql:
-                if field in sql.get_fields(self.table.name):
-                    field_positions.append(sql.get_fields(self.table.name).index(field))
 
-        self.save_button.config(command=lambda: self.update_record(self.table.name, record_id, list()), 
-        state="normal")
-        self.delete_button.config(command=lambda: self.delete_record(self.table.name, record_id), state="normal")
+        #update field frame buttons
+        self.save_button.config(command=lambda: self.update_record(self.table.name, row_number, fields, [entry.get() for entry in entries]), state="normal")
         
-        print(self.join_record(record, field_positions, entries))
-        # print(self.table.name, record_id, list(record[field_positions[0]:] + [entry.get() for entry in entries])) #+ record[field_positions[-1]+1:]))
 
-    def join_record(self, record, field_positions, entries):
-        with SqliteHandler(self.database_path) as sql:
-            fields = sql.get_fields(self.table.name)
-
-        for i, item in enumerate(record):
-            if fields.index(fields[i]) in field_positions:
-                record[i] = entries.pop(0).get()
-        return record
-
-
-    def update_record(self, table_name, row_number, data):
-        self.table_transactions[table_name].append(('update_record', row_number, data))
+    def update_record(self, table_name, row_number, fields, data):
+        self.table_transactions[table_name].append(('update_record', row_number, fields, data))
 
         # reload the table widget
         self.load_table()
@@ -152,8 +130,10 @@ class MainFrame(tk.Frame):
             widget.destroy()
 
         #disable buttons
-        self.save_button.config(state="disabled")
-        self.delete_button.config(state="disabled")
+        self.save_button.config(state="disabled", command=None)
+        self.delete_button.config(state="disabled", command=None)
+
+        self.load_table()
 
     def delete_record(self, table_name, row_number: int):
         self.table_transactions[table_name].append(('delete_record', row_number))
@@ -251,8 +231,18 @@ class MainFrame(tk.Frame):
         self.table = TreeviewTable(self.middle_frame, selection[0])
         self.table.bind("<<TreeviewSelect>>", self.item_selected)
         self.table.bind("<Button-3>", self.table_popup)
-        
+
         with SqliteHandler(self.database_path) as sql:
+            if len(selection) == 1:
+                fields = sql.get_fields(selection[0])
+            elif len(selection) == 2:
+                fields = list([selection[1]])
+            
+            fields_data_types = {} # {'field_name': <class 'int'>}
+        
+            for i, field in enumerate(sql.get_fields(selection[0])):
+                fields_data_types[field] = type(sql.get_record(selection[0], 0)[i])
+
             for transaction in self.table_transactions[selection[0]]:
                 if transaction[0] == 'delete_record':
                     sql.delete_record(selection[0], transaction[1])
@@ -261,23 +251,29 @@ class MainFrame(tk.Frame):
                     sql.delete_records(selection[0], transaction[1])
                 
                 elif transaction[0] == 'update_record':
-                    sql.edit_record(selection[0], transaction[1], transaction[2])
+                    data = list(transaction[3])
+                    print(transaction[2])
+                    for i, field in enumerate(transaction[2]):
+                        if fields_data_types[field] == str:
+                            data[i] = f"'{data[i]}'"
+                    sql.update_record(selection[0], transaction[1], transaction[2], data)
             
-            records = sql.get_all_records(selection[0])
+            records = []
+            for i, record in enumerate(sql.get_all_records(selection[0])):
+                records.append([])
+                for field in fields:
+                    records[i].append(record[sql.get_fields(self.table.name).index(field)])
 
-            if len(selection) == 1:
-                fields = sql.get_fields(selection[0])
-            else:
-                fields = [selection[1]]
-                records = [[record[sql.get_fields(self.table.name).index(fields[0])]] for record in records]
-            
         self.table.add_records(records)
+        # print(records)
         self.table.add_fields(fields)
 
         self.table.draw()
         self.table.grid(row=0, column=0, sticky="nsew")
         self.middle_frame.grid_columnconfigure(0, weight=1)
         self.middle_frame.grid_rowconfigure(0, weight=1)
+
+        
 
 window = Window(MainFrame, 800, 600, "red")
 tk.mainloop()
