@@ -117,6 +117,7 @@ class MainFrame(tk.Frame):
 
         #update field frame buttons
         self.save_button.config(command=lambda: self.update_record(self.table.name, row_number, fields, [entry.get() for entry in entries]), state="normal")
+        self.delete_button.config(command=lambda: self.delete_record(self.table.name, row_number), state="normal")
         
 
     def update_record(self, table_name, row_number, fields, data):
