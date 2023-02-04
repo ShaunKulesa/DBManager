@@ -25,12 +25,12 @@ class SqliteHandler:
     
     def __exit__(self, exc_type, exc_value, traceback):
         self.con.close()
+
+    # def begin(self):
+    #     self.cur.execute("BEGIN")
     
-    def begin(self):
-        self.cur.execute("BEGIN")
-    
-    def end(self):
-        self.con.execute("END")
+    # def end(self):
+    #     self.con.execute("END")
 
     def add_table(self, name, fields):
         if not isinstance(fields,tuple):
@@ -53,12 +53,12 @@ class SqliteHandler:
 
     def delete_record(self, table, pos):
         row_id = self.get_all_records(table)[pos][0]
-        table = ''.join( chr for chr in table if chr.isalnum() )
+        table = ''.join( chr for chr in table if chr.isalnum())
         self.cur.execute(f"DELETE FROM {table} WHERE rowid={row_id}")
     
-    def delete_records(self, table, slice):
-        row_ids = [record[0] for record in self.get_all_records(table)[slice]]
-        table = ''.join( chr for chr in table if chr.isalnum() )
+    def delete_records(self, table, selection):
+        row_ids = [record[0] for record in self.get_all_records(table)[selection]]
+        table = ''.join(chr for chr in table if chr.isalnum())
         # print("row"row_ids)
         self.cur.execute(f"DELETE FROM {table} WHERE rowid IN {tuple(row_ids)}")
 
@@ -87,6 +87,16 @@ class SqliteHandler:
         sql_statement = f"UPDATE {table} SET {set_data} where rowid={row_id}"
         # print(sql_statement)
         self.cur.execute(sql_statement)
+
+    def execute_statement(self, statement):
+
+        self.con.execute("BEGIN TRANSACTION")
+        try:
+            self.cur.execute(statement)
+            self.con.commit()
+        except Exception as e:
+            self.con.rollback()
+            raise e
 
 # with SqliteHandler("./database.db") as sql:
 
